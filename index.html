@@ -21,15 +21,19 @@
         }).addTo(map);
 
         // افزودن لایه ماهواره‌ای MapTiler
-        var mapTilerSatLayer = L.tileLayer('https://api.maptiler.com/maps/97c2d089-abe6-42bc-b9fe-553f7dc3ac7b/?key=EwZH7ehpNDevDOhZ6hCV', {
-            maxZoom: 18,
-            attribution: 'Map data © <a href="https://www.maptiler.com/">MapTiler</a>'
+        var mapTilerKey = 'EwZH7ehpNDevDOhZ6hCV'; // جایگزین کنید با کلید API خود
+        var mapTilerSatLayer = L.tileLayer('https://api.maptiler.com/maps/hybrid/{z}/{x}/{y}.jpg?key=' + mapTilerKey, {
+            tileSize: 512,
+            zoomOffset: -1,
+            minZoom: 1,
+            attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
+            crossOrigin: true
         });
 
         // افزودن لایه‌های نقشه به عنوان گزینه‌های انتخابی
         var baseLayers = {
             "OSM": osmLayer,
-            "Satellite": mapTilerSatLayer // تغییر به mapTilerSatLayer
+            "Satellite": mapTilerSatLayer
         };
         
         // کنترل لایه‌ها را به نقشه اضافه کنید
