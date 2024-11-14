@@ -47,7 +47,7 @@
                     // خواندن مختصات و وضعیت چک لیست
                     var lat = parseFloat(row["Latitude"]);
                     var lon = parseFloat(row["Longitude"]);
-                    var checked = row["OK"] === "checked";
+                    var checked = row["OK"] === TRUE;
 
                     // تنظیم رنگ بر اساس وضعیت چک لیست
                     var markerColor = checked ? "green" : "red";
