@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>نقشه با نقاط پویا</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<style>#map { height: 100vh; }</style>
+</head>
+<body>
+<div id="map"></div>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+// ایجاد نقشه
+var map = L.map('map').setView([35.6892, 51.3890], 13);
+
+// افزودن لایه به نقشه
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+// افزودن نقطه
+var marker = L.circleMarker([35.6892, 51.3890], {
+color: 'red',
+radius: 10
+}).addTo(map);
+
+// تغییر رنگ نقطه
+function changeColor() {
+marker.setStyle({ color: 'blue' });
+}
+
+// فراخوانی تابع تغییر رنگ بعد از چند ثانیه
+setTimeout(changeColor, 3000);
+</script>
+</body>
+</html>
