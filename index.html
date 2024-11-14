@@ -41,9 +41,9 @@
                     // افزودن مارکر به نقشه
                     L.circleMarker([lat, lon], {
                         color: markerColor,
-                        radius: 5
+                        radius: 10
                     }).addTo(map).bindPopup(`
-                        <b>Well ID:</b> ${row["Well ID"]}<br>
+                        <b>Well ID:</b> ${row["پرسشنامه تکمیل شد"]}<br>
                         <b>Checked:</b> ${checked ? "Yes" : "No"}
                     `);
                 });
