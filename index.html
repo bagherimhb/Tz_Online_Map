@@ -1,33 +1,54 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>نقشه با نقاط پویا</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-<style>#map { height: 100vh; }</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Well Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
 </head>
 <body>
-<div id="map"></div>
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-<script>
-// ایجاد نقشه
-var map = L.map('map').setView([35.6892, 51.3890], 13);
+    <div id="map" style="width: 100%; height: 600px;"></div>
+    
+    <script>
+        // ایجاد نقشه و تنظیمات اولیه
+        var map = L.map('map').setView([31.5, 49.0], 6);  // مختصات مرکز اولیه
 
-// افزودن لایه به نقشه
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        // افزودن لایه Tile
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 18,
+            attribution: 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
+        }).addTo(map);
 
-// افزودن نقطه
-var marker = L.circleMarker([35.6892, 51.3890], {
-color: 'red',
-radius: 10
-}).addTo(map);
+        // لینک CSV داده‌های Google Sheets
+        const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSge8iyIvBomiIgCEQIv1ctR2Wgll3aGclzzgkbBiJCWE5wgRCE41KDq0uUUU8l0X8IbxDqIFvVlEa0/pub?gid=0&single=true&output=csv";
 
-// تغییر رنگ نقطه
-function changeColor() {
-marker.setStyle({ color: 'blue' });
-}
+        // بارگذاری و پردازش داده‌ها با PapaParse
+        Papa.parse(csvUrl, {
+            download: true,
+            header: true,
+            complete: function(results) {
+                results.data.forEach(function(row) {
+                    // خواندن مختصات و وضعیت چک لیست
+                    var lat = parseFloat(row["Latitude"]);
+                    var lon = parseFloat(row["Longitude"]);
+                    var checked = row["Checklist"] === "checked";
 
-// فراخوانی تابع تغییر رنگ بعد از چند ثانیه
-setTimeout(changeColor, 3000);
-</script>
+                    // تنظیم رنگ بر اساس وضعیت چک لیست
+                    var markerColor = checked ? "red" : "green";
+
+                    // افزودن مارکر به نقشه
+                    L.circleMarker([lat, lon], {
+                        color: markerColor,
+                        radius: 5
+                    }).addTo(map).bindPopup(`
+                        <b>Well ID:</b> ${row["Well ID"]}<br>
+                        <b>Checked:</b> ${checked ? "Yes" : "No"}
+                    `);
+                });
+            }
+        });
+    </script>
 </body>
 </html>
