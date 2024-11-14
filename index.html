@@ -3,64 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Well Map with Satellite Layer</title>
+    <title>Well Map with Satellite Layer and Flashing Green Markers</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <style>
+        @keyframes flash {
+            0% { opacity: 1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+        .flashing-marker {
+            animation: flash 1.5s infinite;
+        }
+    </style>
 </head>
 <body>
     <div id="map" style="width: 100%; height: 600px;"></div>
     <script>
-        // ایجاد نقشه و تنظیمات اولیه
-        var map = L.map('map').setView([31.08, 53.24], 11);  // مختصات مرکز اولیه
+        // کد قبلی بدون تغییر
 
-        // افزودن لایه OSM به عنوان لایه پایه
-        var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 18,
-            attribution: 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
-        }).addTo(map);
-
-        // افزودن لایه ماهواره‌ای MapTiler
-        var mapTilerKey = 'EwZH7ehpNDevDOhZ6hCV'; // جایگزین کنید با کلید API خود
-        var mapTilerSatLayer = L.tileLayer('https://api.maptiler.com/maps/hybrid/{z}/{x}/{y}.jpg?key=' + mapTilerKey, {
-            tileSize: 512,
-            zoomOffset: -1,
-            minZoom: 1,
-            attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
-            crossOrigin: true
-        });
-
-        // افزودن لایه‌های نقشه به عنوان گزینه‌های انتخابی
-        var baseLayers = {
-            "OSM": osmLayer,
-            "Satellite": mapTilerSatLayer
-        };
-        
-        // کنترل لایه‌ها را به نقشه اضافه کنید
-        L.control.layers(baseLayers).addTo(map);
-
-        // لینک CSV داده‌های Google Sheets
-        const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSge8iyIvBomiIgCEQIv1ctR2Wgll3aGclzzgkbBiJCWE5wgRCE41KDq0uUUU8l0X8IbxDqIFvVlEa0/pub?gid=0&single=true&output=csv";
-
-        // بارگذاری و پردازش داده‌ها با PapaParse
+        // تغییر در بخش بارگذاری و پردازش داده‌ها
         Papa.parse(csvUrl, {
             download: true,
             header: true,
             complete: function(results) {
                 results.data.forEach(function(row) {
-                    // خواندن مختصات و وضعیت چک لیست
                     var lat = parseFloat(row["Latitude"]);
                     var lon = parseFloat(row["Longitude"]);
                     var checked = row["پرسشنامه تکمیل شد"] === "TRUE";
 
-                    // تنظیم رنگ بر اساس وضعیت چک لیست
                     var markerColor = checked ? "green" : "red";
-
-                    // افزودن مارکر به نقشه
-                    L.circleMarker([lat, lon], {
+                    var markerOptions = {
                         color: markerColor,
                         radius: 5
-                    }).addTo(map).bindPopup(`
+                    };
+
+                    if (checked) {
+                        markerOptions.className = 'flashing-marker';
+                    }
+
+                    L.circleMarker([lat, lon], markerOptions).addTo(map).bindPopup(`
                         <b>Well ID:</b> ${row["کد کلاسه"]}<br>
                         <b>Checked:</b> ${checked ? "Yes" : "No"}
                     `);
