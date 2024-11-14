@@ -21,50 +21,51 @@
 <body>
     <div id="map" style="width: 100%; height: 600px;"></div>
     <script>
+        var mapTilerKey = 'EwZH7ehpNDevDOhZ6hCV';
+
         // ایجاد نقشه و تنظیمات اولیه
-        var map = L.map('map').setView([31.08, 53.24], 11);
+        var map = L.map('map', {
+            center: [31.08, 53.24],
+            zoom: 11,
+            layers: [] // لایه پیش‌فرض را خالی می‌گذاریم
+        });
 
         // افزودن لایه OSM به عنوان لایه پایه
         var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 18,
             attribution: 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
-        }).addTo(map);
+        });
 
-        
         // افزودن لایه ماهواره‌ای MapTiler
-        var mapTilerKey = 'EwZH7ehpNDevDOhZ6hCV';
         var mapTilerSatLayer = L.tileLayer('https://api.maptiler.com/maps/hybrid/{z}/{x}/{y}.jpg?key=' + mapTilerKey, {
-        tileSize: 512,
+            tileSize: 512,
             zoomOffset: -1,
             minZoom: 1,
             attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
             crossOrigin: true
         });
 
-
-        
         // افزودن لایه ماهواره‌ای MapTiler (نقشه اختصاصی)
-        var mapTilerKey = 'EwZH7ehpNDevDOhZ6hCV';
         var customMapTilerLayer = L.tileLayer('https://api.maptiler.com/maps/dd107083-71f8-4e70-a22d-01853cc436b1/{z}/{x}/{y}.png?key=' + mapTilerKey, {
             tileSize: 512,
             zoomOffset: -1,
             minZoom: 1,
             attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
             crossOrigin: true
-         });
-        
-customMapTilerLayer.addTo(map);
-        
+        });
 
         // افزودن لایه‌های نقشه به عنوان گزینه‌های انتخابی
         var baseLayers = {
             "OSM": osmLayer,
-            "Satellite": mapTilerSatLayer
-            "Bagheri_Tiler": "customMapTilerLayer"
+            "Satellite": mapTilerSatLayer,
+            "Bagheri_Tiler": customMapTilerLayer
         };
         
         // کنترل لایه‌ها را به نقشه اضافه کنید
         L.control.layers(baseLayers).addTo(map);
+
+        // لایه پیش‌فرض را اضافه می‌کنیم
+        customMapTilerLayer.addTo(map);
 
         // لینک CSV داده‌های Google Sheets
         const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSge8iyIvBomiIgCEQIv1ctR2Wgll3aGclzzgkbBiJCWE5wgRCE41KDq0uUUU8l0X8IbxDqIFvVlEa0/pub?gid=0&single=true&output=csv";
