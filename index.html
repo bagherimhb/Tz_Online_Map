@@ -33,7 +33,7 @@
                     // خواندن مختصات و وضعیت چک لیست
                     var lat = parseFloat(row["Latitude"]);
                     var lon = parseFloat(row["Longitude"]);
-                    var checked = row["Checklist"] === "checked";
+                    var checked = row["پرسشنامه تکمیل شد"] === "checked";
 
                     // تنظیم رنگ بر اساس وضعیت چک لیست
                     var markerColor = checked ? "red" : "green";
@@ -43,7 +43,7 @@
                         color: markerColor,
                         radius: 10
                     }).addTo(map).bindPopup(`
-                        <b>Well ID:</b> ${row["پرسشنامه تکمیل شد"]}<br>
+                        <b>Well ID:</b> ${row["کلاسه"]}<br>
                         <b>Checked:</b> ${checked ? "Yes" : "No"}
                     `);
                 });
