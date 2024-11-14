@@ -21,10 +21,10 @@
             attribution: 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
         }).addTo(map);
 
-        // افزودن لایه ماهواره‌ای Esri
-        var esriSatLayer = L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+          // افزودن لایه ماهواره‌ای MapTiler
+        var mapTilerSatLayer = L.tileLayer('https://api.maptiler.com/tiles/satellite/{z}/{x}/{y}.jpg?key=EwZH7ehpNDevDOhZ6hCV', {
             maxZoom: 18,
-            attribution: 'Tiles © Esri'
+            attribution: 'Map data © <a href="https://www.maptiler.com/">MapTiler</a>'
         });
 
         // افزودن لایه‌های نقشه به عنوان گزینه‌های انتخابی
