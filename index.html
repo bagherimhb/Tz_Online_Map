@@ -3,96 +3,36 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Well Map with Custom MapTiler Layer</title>
+<title>Map with Shapefile Layer</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+<script src="https://unpkg.com/shpjs@3.4.0/dist/shp.min.js"></script> <!-- کتابخانه Shapefile -->
 <style>
-@keyframes flash {
-0% { opacity: 1; }
-50% { opacity: 0.3; }
-100% { opacity: 1; }
-}
-.flashing-marker {
-animation: flash 1s infinite;
-}
 #map {
-width: 100%;
-height: 600px;
+  width: 100%;
+  height: 600px;
 }
 </style>
 </head>
 <body>
 <div id="map"></div>
 <script>
-var mapTilerKey = 'otxQEa1xT4DzKWLSdyS7';
+  // ایجاد نقشه
+  var map = L.map('map').setView([31.052, 53.2621], 10);
 
-// ایجاد نقشه و تنظیمات اولیه
-var map = L.map('map', {
-center: [31.052, 53.2621],
-zoom: 10
-});
+  // افزودن لایه OSM به عنوان لایه پایه
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
 
-// افزودن لایه OSM
-var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-maxZoom: 19,
-attribution: '© OpenStreetMap contributors'
-});
-
-// افزودن لایه ماهواره‌ای MapTiler
-var mapTilerSatLayer = L.tileLayer('https://api.maptiler.com/maps/hybrid/{z}/{x}/{y}.jpg?key=' + mapTilerKey, {
-tileSize: 512,
-zoomOffset: -1,
-minZoom: 1,
-maxZoom: 19,
-attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
-crossOrigin: true
-}).addTo(map); // افزودن لایه ماهواره‌ای به عنوان لایه پیش‌فرض
-
-// افزودن لایه‌های نقشه به عنوان گزینه‌های انتخابی
-var baseLayers = {
-"OSM": osmLayer,
-"Satellite": mapTilerSatLayer
-};
-
-// کنترل لایه‌ها را به نقشه اضافه کنید
-L.control.layers(baseLayers).addTo(map);
-
-// لینک CSV داده‌های Google Sheets
-const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSge8iyIvBomiIgCEQIv1ctR2Wgll3aGclzzgkbBiJCWE5wgRCE41KDq0uUUU8l0X8IbxDqIFvVlEa0/pub?gid=0&single=true&output=csv";
-
-// بارگذاری و پردازش داده‌ها با PapaParse
-Papa.parse(csvUrl, {
-download: true,
-header: true,
-complete: function(results) {
-results.data.forEach(function(row) {
-var lat = parseFloat(row["Latitude"]);
-var lon = parseFloat(row["Longitude"]);
-var checked = row["پرسشنامه تکمیل شد"] === "TRUE";
-
-if (!isNaN(lat) && !isNaN(lon)) {
-var markerColor = checked ? "green" : "red";
-var markerOptions = {
-color: markerColor,
-radius: 3
-};
-
-if (checked) {
-markerOptions.className = 'flashing-marker';
-}
-
-L.circleMarker([lat, lon], markerOptions).addTo(map).bindPopup(`
-<b>Well ID:</b> ${row["کد کلاسه"]}<br>
-<b>Checked:</b> ${checked ? "Yes" : "No"}
-`);
-}
-});
-},
-error: function(error) {
-console.error("Error parsing CSV:", error);
-}
-});
+  // خواندن فایل zip شده Shapefile
+  shp("/path/to/your/uploaded/Aquifer_.zip").then(function(geojson) {
+    // افزودن لایه GeoJSON به نقشه
+    L.geoJSON(geojson).addTo(map);
+  }).catch(function(error) {
+    console.error("Error loading shapefile:", error);
+  });
 </script>
 </body>
 </html>
