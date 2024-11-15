@@ -26,7 +26,6 @@ width: 0;
 height: 0;
 border-left: 7px solid transparent;
 border-right: 7px solid transparent;
-border-bottom: 14px solid;
 position: absolute;
 transform: translate(-50%, -50%);
 z-index: 0; /* مثلث‌ها زیر دایره‌ها قرار می‌گیرند */
@@ -104,25 +103,25 @@ if (!isNaN(lat) && !isNaN(lon)) {
     if (overuseWater > 50 && overuseElectricity > 50) {
         triangleIcon = L.divIcon({
             className: 'triangle-marker',
-            html: `<div style="border-bottom-color: red;"></div>`,
+            html: `<div style="border-bottom: 14px solid red;"></div>`,  // رنگ قرمز برای اضافه برداشت شدید
             iconSize: [14, 14]
         });
     } else if (overuseWater > 30 || overuseElectricity > 30) {
         triangleIcon = L.divIcon({
             className: 'triangle-marker',
-            html: `<div style="border-bottom-color: orange;"></div>`,
+            html: `<div style="border-bottom: 14px solid orange;"></div>`,  // رنگ نارنجی برای اضافه برداشت متوسط
             iconSize: [14, 14]
         });
     } else if (overuseWater > 10 || overuseElectricity > 10) {
         triangleIcon = L.divIcon({
             className: 'triangle-marker',
-            html: `<div style="border-bottom-color: yellow;"></div>`,
+            html: `<div style="border-bottom: 14px solid yellow;"></div>`,  // رنگ زرد برای اضافه برداشت کم
             iconSize: [14, 14]
         });
     } else {
         triangleIcon = L.divIcon({
             className: 'triangle-marker',
-            html: `<div style="border-bottom-color: green;"></div>`,
+            html: `<div style="border-bottom: 14px solid green;"></div>`,  // رنگ سبز برای عدم اضافه برداشت
             iconSize: [14, 14]
         });
     }
