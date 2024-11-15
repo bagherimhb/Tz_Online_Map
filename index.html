@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
-<script src="https://unpkg.com/shpjs@3.4.0/dist/shp.min.js"></script> <!-- اضافه کردن کتابخانه shp.js -->
+<script src="https://unpkg.com/shpjs@3.4.0/dist/shp.min.js"></script>
 <style>
 @keyframes flash {
 0% { opacity: 1; }
@@ -20,6 +20,15 @@ animation: flash 1s infinite;
 #map {
 width: 100%;
 height: 600px;
+}
+.triangle-marker {
+width: 0;
+height: 0;
+border-left: 7px solid transparent;
+border-right: 7px solid transparent;
+border-bottom: 14px solid;
+position: absolute;
+transform: translate(-50%, -50%);
 }
 </style>
 </head>
@@ -71,22 +80,55 @@ results.data.forEach(function(row) {
 var lat = parseFloat(row["Latitude"]);
 var lon = parseFloat(row["Longitude"]);
 var checked = row["پرسشنامه تکمیل شد"] === "TRUE";
+var overuseWater = parseFloat(row["درصد اضافه برداشت آب"]);
+var overuseElectricity = parseFloat(row["درصد اضافه برداشت برق"]);
 
 if (!isNaN(lat) && !isNaN(lon)) {
-var markerColor = checked ? "green" : "red";
-var markerOptions = {
-color: markerColor,
-radius: 3
-};
-
-if (checked) {
-markerOptions.className = 'flashing-marker';
+if (overuseWater > 50 && overuseElectricity > 50) {
+    var icon = L.divIcon({
+        className: '',
+        html: `<div class="triangle-marker" style="border-bottom-color: red;"></div>`,
+        iconSize: [14, 14]
+    });
+    L.marker([lat, lon], { icon }).addTo(map).bindPopup(`
+    <b>Well ID:</b> ${row["کد کلاسه"]}<br>
+    <b>Water Overuse:</b> ${overuseWater}%<br>
+    <b>Electricity Overuse:</b> ${overuseElectricity}%
+    `);
+} else if (overuseWater > 30 || overuseElectricity > 30) {
+    var icon = L.divIcon({
+        className: '',
+        html: `<div class="triangle-marker" style="border-bottom-color: orange;"></div>`,
+        iconSize: [14, 14]
+    });
+    L.marker([lat, lon], { icon }).addTo(map).bindPopup(`
+    <b>Well ID:</b> ${row["کد کلاسه"]}<br>
+    <b>Water Overuse:</b> ${overuseWater}%<br>
+    <b>Electricity Overuse:</b> ${overuseElectricity}%
+    `);
+} else if (overuseWater > 10 || overuseElectricity > 10) {
+    var icon = L.divIcon({
+        className: '',
+        html: `<div class="triangle-marker" style="border-bottom-color: yellow;"></div>`,
+        iconSize: [14, 14]
+    });
+    L.marker([lat, lon], { icon }).addTo(map).bindPopup(`
+    <b>Well ID:</b> ${row["کد کلاسه"]}<br>
+    <b>Water Overuse:</b> ${overuseWater}%<br>
+    <b>Electricity Overuse:</b> ${overuseElectricity}%
+    `);
+} else {
+    var icon = L.divIcon({
+        className: '',
+        html: `<div class="triangle-marker" style="border-bottom-color: green;"></div>`,
+        iconSize: [14, 14]
+    });
+    L.marker([lat, lon], { icon }).addTo(map).bindPopup(`
+    <b>Well ID:</b> ${row["کد کلاسه"]}<br>
+    <b>Water Overuse:</b> ${overuseWater}%<br>
+    <b>Electricity Overuse:</b> ${overuseElectricity}%
+    `);
 }
-
-L.circleMarker([lat, lon], markerOptions).addTo(map).bindPopup(`
-<b>Well ID:</b> ${row["کد کلاسه"]}<br>
-<b>Checked:</b> ${checked ? "Yes" : "No"}
-`);
 }
 });
 },
