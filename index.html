@@ -182,6 +182,21 @@ Papa.parse(csvUrl, {
   }
 });
 
+// بارگذاری و افزودن لایه Shapefile با شفافیت 30%
+shp("shape_files/Aquifer_.zip").then(function(geojson) {
+  L.geoJSON(geojson, {
+    style: function() {
+      return {
+        color: "#3388ff", // رنگ لایه
+        opacity: 0.3,     // شفافیت لایه به 30 درصد تغییر یافت
+        fillOpacity: 0.3  // شفافیت داخل پلیگون‌ها به 30 درصد تغییر یافت
+      };
+    }
+  }).addTo(map);
+}).catch(function(error) {
+  console.error("Error loading shapefile:", error);
+});
+
 // جستجو بر اساس WELL ID
 function searchWell() {
   var searchTerm = document.getElementById("well-id-search").value.toUpperCase();
