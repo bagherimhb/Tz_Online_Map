@@ -1,103 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Well Map with Custom MapTiler Layer and Clustering</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
-    <style>
-        @keyframes flash {
-            0% { opacity: 1; }
-            50% { opacity: 0.3; }
-            100% { opacity: 1; }
-        }
-        .flashing-marker {
-            animation: flash 1.5s infinite;
-        }
-        #map {
-            width: 100%;
-            height: 600px;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Well Map with Clustering</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css">
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+<style>
+@keyframes flash {
+  0% { opacity: 1; }
+  50% { opacity: 0.3; }
+  100% { opacity: 1; }
+}
+.flashing-marker {
+  animation: flash 1.5s infinite;
+}
+#map {
+  width: 100%;
+  height: 600px;
+}
+</style>
 </head>
 <body>
-    <div id="map"></div>
-    <script>
-        var mapTilerKey = 'otxQEa1xT4DzKWLSdyS7';
+<div id="map"></div>
+<script>
+var mapTilerKey = 'otxQEa1xT4DzKWLSdyS7';
 
-        var map = L.map('map', {
-            center: [31.052, 53.2621],
-            zoom: 10
-        });
+// ایجاد نقشه و تنظیمات اولیه
+var map = L.map('map', {
+  center: [31.052, 53.2621],
+  zoom: 10
+});
 
-        var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '© OpenStreetMap contributors'
-        });
+// افزودن لایه OSM به عنوان لایه پایه
+var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+  attribution: '© OpenStreetMap contributors'
+});
 
-        var mapTilerSatLayer = L.tileLayer('https://api.maptiler.com/maps/hybrid/{z}/{x}/{y}.jpg?key=' + mapTilerKey, {
-            tileSize: 512,
-            zoomOffset: -1,
-            minZoom: 1,
-            maxZoom: 19,
-            attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
-            crossOrigin: true
-        });
+// افزودن لایه ماهواره‌ای MapTiler
+var mapTilerSatLayer = L.tileLayer('https://api.maptiler.com/maps/hybrid/{z}/{x}/{y}.jpg?key=' + mapTilerKey, {
+  tileSize: 512,
+  zoomOffset: -1,
+  minZoom: 1,
+  maxZoom: 19,
+  attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
+  crossOrigin: true
+});
 
-        var baseLayers = {
-            "OSM": osmLayer,
-            "Satellite": mapTilerSatLayer
-        };
-        
-        L.control.layers(baseLayers).addTo(map);
+// افزودن لایه‌های نقشه به عنوان گزینه‌های انتخابی
+var baseLayers = {
+  "OSM": osmLayer,
+  "Satellite": mapTilerSatLayer
+};
 
-        // ایجاد گروه نشانگرها
-        var markers = L.markerClusterGroup();
+// کنترل لایه‌ها را به نقشه اضافه کنید
+L.control.layers(baseLayers).addTo(map);
 
-        const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSge8iyIvBomiIgCEQIv1ctR2Wgll3aGclzzgkbBiJCWE5wgRCE41KDq0uUUU8l0X8IbxDqIFvVlEa0/pub?gid=0&single=true&output=csv";
+// لینک CSV داده‌های Google Sheets
+const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSge8iyIvBomiIgCEQIv1ctR2Wgll3aGclzzgkbBiJCWE5wgRCE41KDq0uUUU8l0X8IbxDqIFvVlEa0/pub?gid=0&single=true&output=csv";
 
-        Papa.parse(csvUrl, {
-            download: true,
-            header: true,
-            complete: function(results) {
-                results.data.forEach(function(row) {
-                    var lat = parseFloat(row["Latitude"]);
-                    var lon = parseFloat(row["Longitude"]);
-                    var checked = row["پرسشنامه تکمیل شد"] === "TRUE";
+// ایجاد گروه خوشه‌بندی
+var markers = L.markerClusterGroup();
 
-                    if (!isNaN(lat) && !isNaN(lon)) {
-                        var markerColor = checked ? "green" : "red";
-                        var markerOptions = {
-                            color: markerColor,
-                            radius: 5
-                        };
+// بارگذاری و پردازش داده‌ها با PapaParse
+Papa.parse(csvUrl, {
+  download: true,
+  header: true,
+  complete: function(results) {
+    results.data.forEach(function(row) {
+      var lat = parseFloat(row["Latitude"]);
+      var lon = parseFloat(row["Longitude"]);
+      var checked = row["پرسشنامه تکمیل شد"] === "TRUE";
 
-                        if (checked) {
-                            markerOptions.className = 'flashing-marker';
-                        }
+      if (!isNaN(lat) && !isNaN(lon)) {
+        var markerColor = checked ? "green" : "red";
+        var marker = L.circleMarker([lat, lon], {
+          color: markerColor,
+          radius: 5
+        }).bindPopup(`
+          <b>Well ID:</b> ${row["کد کلاسه"]}<br>
+          <b>Checked:</b> ${checked ? "Yes" : "No"}
+        `);
 
-                        var marker = L.circleMarker([lat, lon], markerOptions).bindPopup(`
-                            <b>Well ID:</b> ${row["کد کلاسه"]}<br>
-                            <b>Checked:</b> ${checked ? "Yes" : "No"}
-                        `);
+        // افزودن مارکر به گروه خوشه‌بندی
+        markers.addLayer(marker);
+      }
+    });
 
-                        // افزودن نشانگر به گروه
-                        markers.addLayer(marker);
-                    }
-                });
-
-                // افزودن گروه نشانگرها به نقشه
-                map.addLayer(markers);
-            },
-            error: function(error) {
-                console.error("Error parsing CSV:", error);
-            }
-        });
-    </script>
+    // افزودن گروه به نقشه
+    map.addLayer(markers);
+  },
+  error: function(error) {
+    console.error("Error parsing CSV:", error);
+  }
+});
+</script>
 </body>
 </html>
