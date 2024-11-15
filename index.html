@@ -10,71 +10,84 @@
 <script src="https://unpkg.com/shpjs@3.4.0/dist/shp.min.js"></script>
 <style>
 @keyframes flash {
-0% { opacity: 1; }
-50% { opacity: 0.1; }
-100% { opacity: 1; }
+  0% { opacity: 1; }
+  50% { opacity: 0.1; }
+  100% { opacity: 1; }
 }
 .flashing-marker {
-animation: flash 1s infinite;
+  animation: flash 1s infinite;
 }
 #map {
-width: 100%;
-height: 600px;
+  width: 100%;
+  height: 600px;
 }
 .triangle-marker {
-width: 0;
-height: 0;
-border-left: 7px solid transparent;
-border-right: 7px solid transparent;
-position: absolute;
-transform: translate(-50%, -50%);
-z-index: 0; /* مثلث‌ها زیر دایره‌ها قرار می‌گیرند */
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 0;
 }
 .marker-circle {
-width: 6px;
-height: 6px;
-border-radius: 50%;
-background-color: blue;
-position: absolute;
-transform: translate(-50%, -50%);
-z-index: 1; /* دایره‌ها بالاتر از مثلث‌ها قرار می‌گیرند */
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: blue;
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 1;
 }
 .flashing-circle {
-animation: flash 1s infinite;
+  animation: flash 1s infinite;
+}
+#search-container {
+  margin: 10px;
 }
 </style>
 </head>
 <body>
+
+<!-- بخش جستجو -->
+<div id="search-container">
+  <input type="text" id="well-id-search" placeholder="Enter WELL ID to search" />
+  <button onclick="searchWell()">Search</button>
+</div>
+
+<!-- نقشه -->
 <div id="map"></div>
+
 <script>
+// تعریف کلید MapTiler
 var mapTilerKey = 'otxQEa1xT4DzKWLSdyS7';
 
 // ایجاد نقشه و تنظیمات اولیه
 var map = L.map('map', {
-center: [31.052, 53.2621],
-zoom: 10
+  center: [31.052, 53.2621],
+  zoom: 10
 });
 
 // افزودن لایه OSM
 var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-maxZoom: 19,
-attribution: '© OpenStreetMap contributors'
+  maxZoom: 19,
+  attribution: '© OpenStreetMap contributors'
 });
 
 // افزودن لایه ماهواره‌ای MapTiler
 var mapTilerSatLayer = L.tileLayer('https://api.maptiler.com/maps/hybrid/{z}/{x}/{y}.jpg?key=' + mapTilerKey, {
-tileSize: 512,
-zoomOffset: -1,
-minZoom: 1,
-maxZoom: 19,
-attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
-crossOrigin: true
-}).addTo(map); // افزودن لایه ماهواره‌ای به عنوان لایه پیش‌فرض
+  tileSize: 512,
+  zoomOffset: -1,
+  minZoom: 1,
+  maxZoom: 19,
+  attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
+  crossOrigin: true
+}).addTo(map);
 
 // افزودن لایه‌های نقشه به عنوان گزینه‌های انتخابی
 var baseLayers = {
-"OSM": osmLayer,
-"Satellite": mapTilerSatLayer
+  "OSM": osmLayer,
+  "Satellite": mapTilerSatLayer
 };
 
 // کنترل لایه‌ها را به نقشه اضافه کنید
@@ -83,97 +96,107 @@ L.control.layers(baseLayers).addTo(map);
 // لینک CSV داده‌های Google Sheets
 const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSge8iyIvBomiIgCEQIv1ctR2Wgll3aGclzzgkbBiJCWE5wgRCE41KDq0uUUU8l0X8IbxDqIFvVlEa0/pub?gid=0&single=true&output=csv";
 
+// تعریف آرایه‌ای برای ذخیره مارکرها
+var markers = [];
+
 // بارگذاری و پردازش داده‌ها با PapaParse
 Papa.parse(csvUrl, {
-download: true,
-header: true,
-complete: function(results) {
-results.data.forEach(function(row) {
-var lat = parseFloat(row["Latitude"]);
-var lon = parseFloat(row["Longitude"]);
-var checked = row["پرسشنامه تکمیل شد"] === "TRUE";
-var overuseWater = parseFloat(row["درصد اضافه برداشت آب"]);
-var overuseElectricity = parseFloat(row["درصد اضافه برداشت برق"]);
+  download: true,
+  header: true,
+  complete: function(results) {
+    results.data.forEach(function(row) {
+      var lat = parseFloat(row["Latitude"]);
+      var lon = parseFloat(row["Longitude"]);
+      var checked = row["پرسشنامه تکمیل شد"] === "TRUE";
+      var overuseWater = parseFloat(row["درصد اضافه برداشت آب"]);
+      var overuseElectricity = parseFloat(row["درصد اضافه برداشت برق"]);
+      var wellID = row["کد کلاسه"];
 
-if (!isNaN(lat) && !isNaN(lon)) {
-    var triangleIcon;
-    var circleIcon;
-    
-    // تنظیم مارکر مثلثی
-    if (overuseWater > 42.5 && overuseElectricity > 42.5) {
-        triangleIcon = L.divIcon({
-            className: 'triangle-marker',
-            html: `<div style="border-bottom: 14px solid red;"></div>`,  // رنگ قرمز برای اضافه برداشت شدید
-            iconSize: [12, 12]
-        });
-    } else if (overuseWater > 20 || overuseElectricity > 20) {
-        triangleIcon = L.divIcon({
-            className: 'triangle-marker',
-            html: `<div style="border-bottom: 14px solid orange;"></div>`,  // رنگ نارنجی برای اضافه برداشت متوسط
-            iconSize: [12, 12]
-        });
-    } else if (overuseWater > 5 || overuseElectricity > 5) {
-        triangleIcon = L.divIcon({
-            className: 'triangle-marker',
-            html: `<div style="border-bottom: 14px solid yellow;"></div>`,  // رنگ زرد برای اضافه برداشت کم
-            iconSize: [12, 12]
-        });
-    } else {
-        triangleIcon = L.divIcon({
-            className: 'triangle-marker',
-            html: `<div style="border-bottom: 14px solid green;"></div>`,  // رنگ سبز برای عدم اضافه برداشت
-            iconSize: [12, 12]
-        });
-    }
+      if (!isNaN(lat) && !isNaN(lon)) {
+        var triangleIcon;
+        var circleIcon;
 
-    // تنظیم مارکر دایره‌ای (با رنگ آبی و حالت فلاشر در صورت تکمیل پرسشنامه)
-    if (checked) {
-        circleIcon = L.divIcon({
-            className: 'marker-circle flashing-circle', // دایره آبی و حالت فلاشر
+        // تنظیم مارکر مثلثی
+        if (overuseWater > 42.5 && overuseElectricity > 42.5) {
+          triangleIcon = L.divIcon({
+            className: 'triangle-marker',
+            html: `<div style="border-bottom: 14px solid red;"></div>`,
             iconSize: [12, 12]
-        });
-    } else {
-        circleIcon = L.divIcon({
+          });
+        } else if (overuseWater > 20 || overuseElectricity > 20) {
+          triangleIcon = L.divIcon({
+            className: 'triangle-marker',
+            html: `<div style="border-bottom: 14px solid orange;"></div>`,
+            iconSize: [12, 12]
+          });
+        } else if (overuseWater > 5 || overuseElectricity > 5) {
+          triangleIcon = L.divIcon({
+            className: 'triangle-marker',
+            html: `<div style="border-bottom: 14px solid yellow;"></div>`,
+            iconSize: [12, 12]
+          });
+        } else {
+          triangleIcon = L.divIcon({
+            className: 'triangle-marker',
+            html: `<div style="border-bottom: 14px solid green;"></div>`,
+            iconSize: [12, 12]
+          });
+        }
+
+        // تنظیم مارکر دایره‌ای
+        if (checked) {
+          circleIcon = L.divIcon({
+            className: 'marker-circle flashing-circle',
+            iconSize: [12, 12]
+          });
+        } else {
+          circleIcon = L.divIcon({
             className: 'marker-circle',
             iconSize: [3, 3]
-        });
+          });
+        }
+
+        // اضافه کردن مارکر مثلثی
+        var marker = L.marker([lat, lon], { icon: triangleIcon }).addTo(map)
+          .bindPopup(`
+            <b>Well ID:</b> ${wellID}<br>
+            <b>Water Overuse:</b> ${overuseWater}%<br>
+            <b>Electricity Overuse:</b> ${overuseElectricity}%
+          `);
+
+        // اضافه کردن مارکر دایره‌ای
+        var circleMarker = L.marker([lat, lon], { icon: circleIcon }).addTo(map)
+          .bindPopup(`
+            <b>Well ID:</b> ${wellID}<br>
+            <b>Water Overuse:</b> ${overuseWater}%<br>
+            <b>Electricity Overuse:</b> ${overuseElectricity}%
+          `);
+
+        // ذخیره مارکرها در آرایه
+        markers.push({ marker: marker, circleMarker: circleMarker, wellID: wellID });
+      }
+    });
+  },
+  error: function(error) {
+    console.error("Error parsing CSV:", error);
+  }
+});
+
+// جستجو بر اساس WELL ID
+function searchWell() {
+  var searchTerm = document.getElementById("well-id-search").value.toUpperCase();
+  markers.forEach(function(markerObj) {
+    var markerWellID = markerObj.wellID.toUpperCase();
+    if (markerWellID.indexOf(searchTerm) > -1) {
+      markerObj.marker.addTo(map);  // نمایش مارکر مثلثی
+      markerObj.circleMarker.addTo(map);  // نمایش مارکر دایره‌ای
+    } else {
+      map.removeLayer(markerObj.marker);  // مخفی کردن مارکر مثلثی
+      map.removeLayer(markerObj.circleMarker);  // مخفی کردن مارکر دایره‌ای
     }
-
-    // اضافه کردن مارکر مثلثی
-    L.marker([lat, lon], { icon: triangleIcon }).addTo(map).bindPopup(`
-    <b>Well ID:</b> ${row["کد کلاسه"]}<br>
-    <b>Water Overuse:</b> ${overuseWater}%<br>
-    <b>Electricity Overuse:</b> ${overuseElectricity}%
-    `);
-
-    // اضافه کردن مارکر دایره‌ای (با فلاشر در صورت تکمیل پرسشنامه)
-    L.marker([lat, lon], { icon: circleIcon }).addTo(map).bindPopup(`
-    <b>Well ID:</b> ${row["کد کلاسه"]}<br>
-    <b>Water Overuse:</b> ${overuseWater}%<br>
-    <b>Electricity Overuse:</b> ${overuseElectricity}%
-    `);
+  });
 }
-});
-},
-error: function(error) {
-console.error("Error parsing CSV:", error);
-}
-});
-
-// بارگذاری و افزودن لایه Shapefile
-shp("shape_files/Aquifer_.zip").then(function(geojson) {
-  L.geoJSON(geojson, {
-    style: function() {
-      return {
-        color: "#3388ff", // رنگ لایه
-        opacity: 0.25,     // شفافیت لایه
-        fillOpacity: 0.25  // شفافیت داخل پلیگون‌ها (در صورت وجود)
-      };
-    }
-  }).addTo(map);
-}).catch(function(error) {
-  console.error("Error loading shapefile:", error);
-});
 </script>
+
 </body>
 </html>
