@@ -43,7 +43,30 @@
   animation: flash 1s infinite;
 }
 #search-container {
-  margin: 8px;
+  margin: 10px;
+  padding: 5px;
+}
+#well-id-search {
+  width: 250px; /* تنظیم عرض جعبه جستجو */
+  height: 30px; /* تنظیم ارتفاع جعبه جستجو */
+  padding: 5px; /* فاصله داخلی جعبه جستجو */
+  font-size: 16px; /* اندازه متن داخل جعبه جستجو */
+  border-radius: 5px; /* گرد کردن گوشه‌ها */
+  border: 1px solid #ccc; /* رنگ مرز جعبه جستجو */
+  margin-right: 10px; /* فاصله بین جعبه جستجو و دکمه */
+}
+#search-container button {
+  height: 40px; /* ارتفاع دکمه */
+  padding: 0 15px; /* فاصله داخلی دکمه */
+  font-size: 16px; /* اندازه فونت دکمه */
+  background-color: #4CAF50; /* رنگ پس‌زمینه دکمه */
+  color: white; /* رنگ متن دکمه */
+  border: none; /* حذف مرز */
+  border-radius: 5px; /* گرد کردن گوشه‌های دکمه */
+  cursor: pointer; /* تغییر شکل نشانگر موس به دست */
+}
+#search-container button:hover {
+  background-color: #45a049; /* تغییر رنگ پس‌زمینه هنگام هاور */
 }
 </style>
 </head>
@@ -51,7 +74,7 @@
 
 <!-- بخش جستجو -->
 <div id="search-container">
-  <input type="text" id="well-id-search" placeholder="برای جستجوی چاه، کلاسه را وارد نمائید" />
+  <input type="text" id="well-id-search" placeholder="Enter WELL ID to search" />
   <button onclick="searchWell()">Search</button>
 </div>
 
@@ -71,7 +94,7 @@ var map = L.map('map', {
 // افزودن لایه OSM
 var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
-  attribution: 'Developer: MH Bagheri         '
+  attribution: '© OpenStreetMap contributors'
 });
 
 // افزودن لایه ماهواره‌ای MapTiler
@@ -80,7 +103,7 @@ var mapTilerSatLayer = L.tileLayer('https://api.maptiler.com/maps/hybrid/{z}/{x}
   zoomOffset: -1,
   minZoom: 1,
   maxZoom: 19,
-  attribution: 'Developer: MH Bagheri         ',
+  attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
   crossOrigin: true
 }).addTo(map);
 
@@ -181,40 +204,5 @@ Papa.parse(csvUrl, {
     console.error("Error parsing CSV:", error);
   }
 });
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// بارگذاری و افزودن لایه Shapefile با شفافیت 30%
-shp("shape_files/Aquifer_.zip").then(function(geojson) {
-  L.geoJSON(geojson, {
-    style: function() {
-      return {
-        color: "#3388ff", // رنگ لایه
-        opacity: 0.3,     // شفافیت لایه به 30 درصد تغییر یافت
-        fillOpacity: 0.3  // شفافیت داخل پلیگون‌ها به 30 درصد تغییر یافت
-      };
-    }
-  }).addTo(map);
-}).catch(function(error) {
-  console.error("Error loading shapefile:", error);
-});
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-  
-// جستجو بر اساس WELL ID
-function searchWell() {
-  var searchTerm = document.getElementById("well-id-search").value.toUpperCase();
-  markers.forEach(function(markerObj) {
-    var markerWellID = markerObj.wellID.toUpperCase();
-    if (markerWellID.indexOf(searchTerm) > -1) {
-      markerObj.marker.addTo(map);  // نمایش مارکر مثلثی
-      markerObj.circleMarker.addTo(map);  // نمایش مارکر دایره‌ای
-    } else {
-      map.removeLayer(markerObj.marker);  // مخفی کردن مارکر مثلثی
-      map.removeLayer(markerObj.circleMarker);  // مخفی کردن مارکر دایره‌ای
-    }
-  });
-}
-</script>
-
-</body>
-</html>
+// بارگذاری و افزود
