@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Well Map with Custom MapTiler Layer</title>
+    <title>Well Map with Neshan and MapTiler Layers</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://static.neshan.org/sdk/leaflet/1.4.0/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://static.neshan.org/sdk/leaflet/1.4.0/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <style>
         @keyframes flash {
@@ -26,6 +28,7 @@
     <div id="map"></div>
     <script>
         var mapTilerKey = 'otxQEa1xT4DzKWLSdyS7';
+        var neshanKey = 'web.b5ff32f9b02d458ba4b5e8d78bea68fb'; // جایگزین کنید با کلید API نشان خود
 
         // ایجاد نقشه و تنظیمات اولیه
         var map = L.map('map', {
@@ -39,17 +42,23 @@
             attribution: '© OpenStreetMap contributors'
         });
 
+        // افزودن لایه نشان
+        var neshanLayer = L.tileLayer('https://api.neshan.org/v2/base/default/tile/{z}/{x}/{y}.png?key=' + neshanKey, {
+            maxZoom: 19,
+            attribution: '© Neshan'
+        });
+
         // افزودن لایه ماهواره‌ای MapTiler (نقشه اختصاصی)
-var customMapTilerLayer = L.tileLayer('https://api.maptiler.com/maps/{mapId}/{z}/{x}/{y}.png?key={apiKey}', {
-    mapId: '0e59cd8b-e06d-4ca4-a216-0541c8200c50',
-    apiKey: mapTilerKey,
-    tileSize: 512,
-    zoomOffset: -1,
-    minZoom: 1,
-    maxZoom: 19,
-    attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
-    crossOrigin: true
-});
+        var customMapTilerLayer = L.tileLayer('https://api.maptiler.com/maps/{mapId}/{z}/{x}/{y}.png?key={apiKey}', {
+            mapId: '0e59cd8b-e06d-4ca4-a216-0541c8200c50',
+            apiKey: mapTilerKey,
+            tileSize: 512,
+            zoomOffset: -1,
+            minZoom: 1,
+            maxZoom: 19,
+            attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
+            crossOrigin: true
+        });
 
         // افزودن لایه ماهواره‌ای MapTiler
         var mapTilerSatLayer = L.tileLayer('https://api.maptiler.com/maps/hybrid/{z}/{x}/{y}.jpg?key=' + mapTilerKey, {
@@ -62,10 +71,11 @@ var customMapTilerLayer = L.tileLayer('https://api.maptiler.com/maps/{mapId}/{z}
         });
 
         // لایه پیش‌فرض را اضافه می‌کنیم
-        customMapTilerLayer.addTo(map);
+        neshanLayer.addTo(map);
 
         // افزودن لایه‌های نقشه به عنوان گزینه‌های انتخابی
         var baseLayers = {
+            "Neshan": neshanLayer,
             "OSM": osmLayer,
             "Bagheri_Tiler": customMapTilerLayer,
             "Satellite": mapTilerSatLayer
