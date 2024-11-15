@@ -3,10 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Well Map with Leaflet Base Layers</title>
+    <title>Customized Well Map with Leaflet</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
     <style>
         @keyframes flash {
             0% { opacity: 1; }
@@ -19,6 +22,23 @@
         #map {
             width: 100%;
             height: 600px;
+        }
+        .custom-popup .leaflet-popup-content-wrapper {
+            background: rgba(255, 255, 255, 0.8);
+            color: #333;
+            font-size: 14px;
+            line-height: 24px;
+            border-radius: 5px;
+        }
+        .custom-popup .leaflet-popup-content-wrapper a {
+            color: rgba(0, 0, 255, 0.8);
+        }
+        .custom-popup .leaflet-popup-tip-container {
+            width: 30px;
+            height: 15px;
+        }
+        .custom-popup .leaflet-popup-tip {
+            background: rgba(255, 255, 255, 0.8);
         }
     </style>
 </head>
@@ -37,19 +57,42 @@
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
-        // اضافه کردن لایه‌های دیگر (اختیاری)
+        // اضافه کردن لایه‌های دیگر
         var cycleMap = L.tileLayer('https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png', {
             maxZoom: 20,
             attribution: '<a href="https://github.com/cyclosm/cyclosm-cartocss-style/releases" title="CyclOSM - Open Bicycle render">CyclOSM</a> | Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         });
 
+        var satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+        });
+
         var baseLayers = {
             "OpenStreetMap": osmLayer,
-            "CycleMap": cycleMap
+            "CycleMap": cycleMap,
+            "Satellite": satelliteLayer
         };
         
         // کنترل لایه‌ها را به نقشه اضافه کنید
         L.control.layers(baseLayers).addTo(map);
+
+        // اضافه کردن کنترل سفارشی
+        L.Control.CustomControl = L.Control.extend({
+            onAdd: function(map) {
+                var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
+                container.style.backgroundColor = 'white';
+                container.style.padding = '5px';
+                container.innerHTML = 'کنترل سفارشی';
+                return container;
+            }
+        });
+        L.control.customControl = function(opts) {
+            return new L.Control.CustomControl(opts);
+        }
+        L.control.customControl({ position: 'topright' }).addTo(map);
+
+        // ایجاد گروه مارکر برای کلاستر کردن
+        var markers = L.markerClusterGroup();
 
         // لینک CSV داده‌های Google Sheets
         const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSge8iyIvBomiIgCEQIv1ctR2Wgll3aGclzzgkbBiJCWE5wgRCE41KDq0uUUU8l0X8IbxDqIFvVlEa0/pub?gid=0&single=true&output=csv";
@@ -66,26 +109,32 @@
 
                     if (!isNaN(lat) && !isNaN(lon)) {
                         var markerColor = checked ? "green" : "red";
-                        var markerOptions = {
-                            color: markerColor,
-                            radius: 5
-                        };
+                        var customIcon = L.divIcon({
+                            className: 'custom-div-icon',
+                            html: `<div style='background-color:${markerColor};' class='marker-pin'></div>`,
+                            iconSize: [30, 42],
+                            iconAnchor: [15, 42]
+                        });
 
-                        if (checked) {
-                            markerOptions.className = 'flashing-marker';
-                        }
-
-                        L.circleMarker([lat, lon], markerOptions).addTo(map).bindPopup(`
+                        var marker = L.marker([lat, lon], {icon: customIcon});
+                        
+                        marker.bindPopup(`
                             <b>Well ID:</b> ${row["کد کلاسه"]}<br>
                             <b>Checked:</b> ${checked ? "Yes" : "No"}
-                        `);
+                        `, {className: 'custom-popup'});
+
+                        markers.addLayer(marker);
                     }
                 });
+                map.addLayer(markers);
             },
             error: function(error) {
                 console.error("Error parsing CSV:", error);
             }
         });
+
+        // اضافه کردن مقیاس به نقشه
+        L.control.scale().addTo(map);
     </script>
 </body>
 </html>
