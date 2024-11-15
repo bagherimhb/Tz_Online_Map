@@ -39,17 +39,7 @@
             attribution: '© OpenStreetMap contributors'
         });
 
-        // افزودن لایه ماهواره‌ای MapTiler (نقشه اختصاصی)
-var customMapTilerLayer = L.tileLayer('https://api.maptiler.com/maps/{mapId}/{z}/{x}/{y}.png?key={apiKey}', {
-    mapId: '0e59cd8b-e06d-4ca4-a216-0541c8200c50',
-    apiKey: mapTilerKey,
-    tileSize: 512,
-    zoomOffset: -1,
-    minZoom: 1,
-    maxZoom: 19,
-    attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
-    crossOrigin: true
-});
+
 
         // افزودن لایه ماهواره‌ای MapTiler
         var mapTilerSatLayer = L.tileLayer('https://api.maptiler.com/maps/hybrid/{z}/{x}/{y}.jpg?key=' + mapTilerKey, {
@@ -67,7 +57,6 @@ var customMapTilerLayer = L.tileLayer('https://api.maptiler.com/maps/{mapId}/{z}
         // افزودن لایه‌های نقشه به عنوان گزینه‌های انتخابی
         var baseLayers = {
             "OSM": osmLayer,
-            "Bagheri_Tiler": customMapTilerLayer,
             "Satellite": mapTilerSatLayer
         };
         
