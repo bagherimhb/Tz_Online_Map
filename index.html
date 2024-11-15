@@ -100,29 +100,29 @@ if (!isNaN(lat) && !isNaN(lon)) {
     var circleIcon;
     
     // تنظیم مارکر مثلثی
-    if (overuseWater > 40 && overuseElectricity > 40) {
+    if (overuseWater > 42.5 && overuseElectricity > 42.5) {
         triangleIcon = L.divIcon({
             className: 'triangle-marker',
             html: `<div style="border-bottom: 14px solid red;"></div>`,  // رنگ قرمز برای اضافه برداشت شدید
-            iconSize: [14, 14]
+            iconSize: [12, 12]
         });
     } else if (overuseWater > 20 || overuseElectricity > 20) {
         triangleIcon = L.divIcon({
             className: 'triangle-marker',
             html: `<div style="border-bottom: 14px solid orange;"></div>`,  // رنگ نارنجی برای اضافه برداشت متوسط
-            iconSize: [14, 14]
+            iconSize: [12, 12]
         });
     } else if (overuseWater > 5 || overuseElectricity > 5) {
         triangleIcon = L.divIcon({
             className: 'triangle-marker',
             html: `<div style="border-bottom: 14px solid yellow;"></div>`,  // رنگ زرد برای اضافه برداشت کم
-            iconSize: [14, 14]
+            iconSize: [12, 12]
         });
     } else {
         triangleIcon = L.divIcon({
             className: 'triangle-marker',
             html: `<div style="border-bottom: 14px solid green;"></div>`,  // رنگ سبز برای عدم اضافه برداشت
-            iconSize: [14, 14]
+            iconSize: [12, 12]
         });
     }
 
@@ -130,12 +130,12 @@ if (!isNaN(lat) && !isNaN(lon)) {
     if (checked) {
         circleIcon = L.divIcon({
             className: 'marker-circle flashing-circle', // دایره آبی و حالت فلاشر
-            iconSize: [8, 8]
+            iconSize: [10, 10]
         });
     } else {
         circleIcon = L.divIcon({
             className: 'marker-circle',
-            iconSize: [6, 6]
+            iconSize: [3, 3]
         });
     }
 
