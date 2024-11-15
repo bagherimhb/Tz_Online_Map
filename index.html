@@ -27,7 +27,7 @@
   }).addTo(map);
 
   // خواندن فایل zip شده Shapefile
-  shp("/path/to/your/uploaded/Aquifer_.zip").then(function(geojson) {
+  shp("shape_files/Aquifer_.zip").then(function(geojson) {
     // افزودن لایه GeoJSON به نقشه
     L.geoJSON(geojson).addTo(map);
   }).catch(function(error) {
