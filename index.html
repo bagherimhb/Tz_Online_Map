@@ -11,7 +11,7 @@
 <style>
 @keyframes flash {
 0% { opacity: 1; }
-50% { opacity: 0.8; }
+50% { opacity: 0.1; }
 100% { opacity: 1; }
 }
 .flashing-marker {
@@ -100,19 +100,19 @@ if (!isNaN(lat) && !isNaN(lon)) {
     var circleIcon;
     
     // تنظیم مارکر مثلثی
-    if (overuseWater > 50 && overuseElectricity > 50) {
+    if (overuseWater > 40 && overuseElectricity > 40) {
         triangleIcon = L.divIcon({
             className: 'triangle-marker',
             html: `<div style="border-bottom: 14px solid red;"></div>`,  // رنگ قرمز برای اضافه برداشت شدید
             iconSize: [14, 14]
         });
-    } else if (overuseWater > 30 || overuseElectricity > 30) {
+    } else if (overuseWater > 20 || overuseElectricity > 20) {
         triangleIcon = L.divIcon({
             className: 'triangle-marker',
             html: `<div style="border-bottom: 14px solid orange;"></div>`,  // رنگ نارنجی برای اضافه برداشت متوسط
             iconSize: [14, 14]
         });
-    } else if (overuseWater > 10 || overuseElectricity > 10) {
+    } else if (overuseWater > 5 || overuseElectricity > 5) {
         triangleIcon = L.divIcon({
             className: 'triangle-marker',
             html: `<div style="border-bottom: 14px solid yellow;"></div>`,  // رنگ زرد برای اضافه برداشت کم
