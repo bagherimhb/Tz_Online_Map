@@ -1,149 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>هم‌بست آب-انرژی-محیط زیست آبخوان</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
-<script src="https://unpkg.com/shpjs@3.4.0/dist/shp.min.js"></script>
-<style>
-@keyframes flash {
-    0% { opacity: 1; }
-    50% { opacity: 0.1; }
-    100% { opacity: 1; }
-}
-
-.flashing-marker {
-    animation: flash 1s infinite;
-}
-
-#map {
-    width: 100%;
-    height: 600px;
-}
-
-.triangle-marker {
-    width: 0;
-    height: 0;
-    border-left: 7px solid transparent;
-    border-right: 7px solid transparent;
-    position: absolute;
-    transform: translate(-50%, -50%);
-    z-index: 0;
-}
-
-.marker-circle {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background-color: blue;
-    position: absolute;
-    transform: translate(-50%, -50%);
-    z-index: 1;
-}
-
-.flashing-circle {
-    animation: flash 1s infinite;
-}
-
-#search-container {
-    margin: 10px;
-    padding: 5px;
-}
-
-#well-id-search {
-    width: 250px; /* تنظیم عرض جعبه جستجو */
-    height: 30px; /* تنظیم ارتفاع جعبه جستجو */
-    padding: 5px; /* فاصله داخلی جعبه جستجو */
-    font-size: 16px; /* اندازه متن داخل جعبه جستجو */
-    border-radius: 5px; /* گرد کردن گوشه‌ها */
-    border: 1px solid #ccc; /* رنگ مرز جعبه جستجو */
-    margin-right: 10px; /* فاصله بین جعبه جستجو و دکمه */
-}
-
-#search-container button {
-    height: 40px; /* ارتفاع دکمه */
-    padding: 0 15px; /* فاصله داخلی دکمه */
-    font-size: 16px; /* اندازه فونت دکمه */
-    background-color: #4CAF50; /* رنگ پس‌زمینه دکمه */
-    color: white; /* رنگ متن دکمه */
-    border: none; /* حذف مرز */
-    border-radius: 5px; /* گرد کردن گوشه‌های دکمه */
-    cursor: pointer; /* تغییر شکل نشانگر موس به دست */
-}
-
-#search-container button:hover {
-    background-color: #45a049; /* تغییر رنگ پس‌زمینه هنگام هاور */
-}
-
-/* اضافه کردن استایل برای قرار دادن لوگو در پایین راست صفحه */
-#logo {
-    position: fixed;
-    bottom: 30px;
-    right: 10px;
-    width: 300px; /* اندازه لوگو */
-    height: auto;
-    z-index: 2000; /* اطمینان از اینکه لوگو بالای دیگر المان‌ها نمایش داده شود */
-}
-</style>
-</head>
-<body>
-
-<!-- بخش جستجو -->
-<div id="search-container">
-    <input type="text" id="well-id-search" placeholder="برای جستجوی چاه، کلاسه را وارد نمائید" />
-    <button onclick="searchWell()">Search</button>
-</div>
-
-<!-- نقشه -->
-<div id="map"></div>
-
-<!-- اضافه کردن لوگو در پایین راست صفحه -->
-<img id="logo" src="images/waterCo_university.png" alt="Logo" />
-
-<script>
-// تعریف کلید MapTiler
-var mapTilerKey = 'otxQEa1xT4DzKWLSdyS7';
-
-// ایجاد نقشه و تنظیمات اولیه
-var map = L.map('map', {
-    center: [31.052, 53.2621],
-    zoom: 11
-});
-
-// افزودن لایه OSM
-var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: 'Developer: MH Bagheri '
-});
-
-// افزودن لایه ماهواره‌ای MapTiler
-var mapTilerSatLayer = L.tileLayer('https://api.maptiler.com/maps/hybrid/{z}/{x}/{y}.jpg?key=' + mapTilerKey, {
-    tileSize: 512,
-    zoomOffset: -1,
-    minZoom: 1,
-    maxZoom: 19,
-    attribution: 'Developer: MH Bagheri ',
-    crossOrigin: true
-}).addTo(map);
-
-// افزودن لایه‌های نقشه به عنوان گزینه‌های انتخابی
-var baseLayers = {
-    "OSM": osmLayer,
-    "Satellite": mapTilerSatLayer
-};
-
-// کنترل لایه‌ها را به نقشه اضافه کنید
-L.control.layers(baseLayers).addTo(map);
-
-// لینک CSV داده‌های Google Sheets
-const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSge8iyIvBomiIgCEQIv1ctR2Wgll3aGclzzgkbBiJCWE5wgRCE41KDq0uUUU8l0X8IbxDqIFvVlEa0/pub?gid=0&single=true&output=csv";
-
-// تعریف آرایه‌ای برای ذخیره مارکرها
-var markers = [];
-
 // بارگذاری و پردازش داده‌ها با PapaParse
 Papa.parse(csvUrl, {
     download: true,
@@ -158,8 +12,7 @@ Papa.parse(csvUrl, {
             var wellID = row["کد کلاسه"];
 
             if (!isNaN(lat) && !isNaN(lon)) {
-                var triangleIcon;
-                var circleIcon;
+                var triangleIcon, circleIcon;
 
                 // تنظیم مارکر مثلثی
                 if (overuseWater > 42.5 && overuseElectricity > 42.5) {
@@ -202,23 +55,30 @@ Papa.parse(csvUrl, {
                 }
 
                 // اضافه کردن مارکر مثلثی
-                var marker = L.marker([lat, lon], { icon: triangleIcon }).addTo(map)
-                .bindPopup(`
-                    <b>Well ID:</b> ${wellID}<br>
-                    <b>Water Overuse:</b> ${overuseWater}%<br>
-                    <b>Electricity Overuse:</b> ${overuseElectricity}%
-                `);
+                var triangleMarker = L.marker([lat, lon], { icon: triangleIcon }).addTo(map)
+                    .bindPopup(`
+                        <b>Well ID:</b> ${wellID}<br>
+                        <b>Water Overuse:</b> ${overuseWater}%<br>
+                        <b>Electricity Overuse:</b> ${overuseElectricity}%
+                    `);
+                
+                // اضافه کردن ویژگی به مارکر
+                triangleMarker.wellID = wellID;
 
                 // اضافه کردن مارکر دایره‌ای
                 var circleMarker = L.marker([lat, lon], { icon: circleIcon }).addTo(map)
-                .bindPopup(`
-                    <b>Well ID:</b> ${wellID}<br>
-                    <b>Water Overuse:</b> ${overuseWater}%<br>
-                    <b>Electricity Overuse:</b> ${overuseElectricity}%
-                `);
+                    .bindPopup(`
+                        <b>Well ID:</b> ${wellID}<br>
+                        <b>Water Overuse:</b> ${overuseWater}%<br>
+                        <b>Electricity Overuse:</b> ${overuseElectricity}%
+                    `);
+                
+                // اضافه کردن ویژگی به مارکر
+                circleMarker.wellID = wellID;
 
                 // ذخیره مارکرها در آرایه
-                markers.push({ marker: marker, circleMarker: circleMarker });
+                markers.push(triangleMarker);
+                markers.push(circleMarker);
             }
         });
     }
@@ -227,14 +87,17 @@ Papa.parse(csvUrl, {
 // جستجو برای یافتن چاه با کد مشخص
 function searchWell() {
     var searchQuery = document.getElementById("well-id-search").value.toUpperCase();
-    markers.forEach(function(item) {
-        var markerWellID = item.marker.getPopup().getContent().split('<br>')[0].split(': ')[1].toUpperCase();
-        if (markerWellID.includes(searchQuery)) {
-            item.marker.openPopup();
+    var found = false;
+
+    markers.forEach(function(marker) {
+        if (marker.wellID && marker.wellID.toUpperCase().includes(searchQuery)) {
+            map.setView(marker.getLatLng(), 15); // بزرگ‌نمایی به مارکر
+            marker.openPopup(); // باز کردن پاپ‌آپ
+            found = true;
         }
     });
-}
 
-</script>
-</body>
-</html>
+    if (!found) {
+        alert("چاه مورد نظر یافت نشد.");
+    }
+}
