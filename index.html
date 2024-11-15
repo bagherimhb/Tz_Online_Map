@@ -33,13 +33,11 @@ center: [31.052, 53.2621],
 zoom: 10
 });
 
-// افزودن لایه OSM به عنوان لایه پایه
+// افزودن لایه OSM
 var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 maxZoom: 19,
 attribution: '© OpenStreetMap contributors'
 });
-
-
 
 // افزودن لایه ماهواره‌ای MapTiler
 var mapTilerSatLayer = L.tileLayer('https://api.maptiler.com/maps/hybrid/{z}/{x}/{y}.jpg?key=' + mapTilerKey, {
@@ -49,9 +47,7 @@ minZoom: 1,
 maxZoom: 19,
 attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
 crossOrigin: true
-});
-
-
+}).addTo(map); // افزودن لایه ماهواره‌ای به عنوان لایه پیش‌فرض
 
 // افزودن لایه‌های نقشه به عنوان گزینه‌های انتخابی
 var baseLayers = {
