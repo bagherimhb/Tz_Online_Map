@@ -11,7 +11,7 @@
 <style>
 @keyframes flash {
 0% { opacity: 1; }
-50% { opacity: 0.3; }
+50% { opacity: 0.8; }
 100% { opacity: 1; }
 }
 .flashing-marker {
@@ -130,7 +130,7 @@ if (!isNaN(lat) && !isNaN(lon)) {
     if (checked) {
         circleIcon = L.divIcon({
             className: 'marker-circle flashing-circle', // دایره آبی و حالت فلاشر
-            iconSize: [6, 6]
+            iconSize: [8, 8]
         });
     } else {
         circleIcon = L.divIcon({
