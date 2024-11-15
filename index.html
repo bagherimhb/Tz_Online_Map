@@ -81,16 +81,16 @@ background-color: #45a049;
 
 #logo {
 position: fixed;
-bottom: 30px;
+bottom: 20px;
 right: 10px;
-width: 300px;
+width: 150px;
 height: auto;
-z-index: 2000;
+z-index: 1000;
 }
 
 .legend {
 line-height: 18px;
-bottom: 30px;
+bottom: 20px;
 color: #555;
 background-color: white;
 padding: 6px 8px;
@@ -101,7 +101,7 @@ width: 18px;
 height: 18px;
 float: left;
 margin-right: 8px;
-opacity: 0.5;
+opacity: 0.9;
 }
 </style>
 </head>
@@ -157,7 +157,7 @@ var div = L.DomUtil.create("div", "info legend");
 div.innerHTML = '<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAACXBIWXMAAAsTAAALEwEAmpwYAAABFUlEQVR4nM2UPU7DQBCFP0cUdEhcAW6QA1BwFApSUFJDQUnPNSi5Agl1Cio6TkBHg0QREjQU2COtZO3a3rWjSLxqpZ15b3Z2/hYGwBJogRvgDXgHboEVMPQk9prSxw/gGZgBBZADU+AReC3JvwCjIWAFPAHjhP8YuANyoAGOgFPgwcbvgQmwsLECOAHqwDLgGjizuULQxfbfDLgAToJgm8A74MjGc+DYxk1g5+5uE3gd2BXAhY2XQOXsKqfzD3BuawXQBHZFYJcBl8Cp2VVBpwQ+gJnZlU5nGwTLgGtgbOMKuDK7TOiUwDcwt7UK6ITBMuDG2RXOrgy6/4Lp2/5p7/vLnvf9C7cK4BdVjrfxRQf3XQAAAABJRU5ErkJggg==" style="width:20px;height:20px;">';
 return div;
 };
-north.addTo(map);
+//north.addTo(map);
 
 // بارگذاری و نمایش Shapefile آکیفر
 shp("shape_files/Aquifer_.zip").then(function(geojson){
