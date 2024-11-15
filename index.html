@@ -29,16 +29,6 @@ border-right: 7px solid transparent;
 border-bottom: 14px solid;
 position: absolute;
 transform: translate(-50%, -50%);
-z-index: 0; /* مثلث‌ها زیر دایره‌ها قرار می‌گیرند */
-}
-.marker-circle {
-width: 20px;
-height: 20px;
-border-radius: 50%;
-background-color: red;
-position: absolute;
-transform: translate(-50%, -50%);
-z-index: 1; /* دایره‌ها بالاتر از مثلث‌ها قرار می‌گیرند */
 }
 </style>
 </head>
@@ -94,40 +84,81 @@ var overuseWater = parseFloat(row["درصد اضافه برداشت آب"]);
 var overuseElectricity = parseFloat(row["درصد اضافه برداشت برق"]);
 
 if (!isNaN(lat) && !isNaN(lon)) {
-    var icon;
-    // تنظیم نوع مارکر بر اساس شرایط
-    if (overuseWater > 50 && overuseElectricity > 50) {
-        icon = L.divIcon({
-            className: 'triangle-marker', // مثلث قرمز
-            html: `<div style="border-bottom-color: red;"></div>`,
-            iconSize: [14, 14]
-        });
-    } else if (overuseWater > 30 || overuseElectricity > 30) {
-        icon = L.divIcon({
-            className: 'triangle-marker', // مثلث نارنجی
-            html: `<div style="border-bottom-color: orange;"></div>`,
-            iconSize: [14, 14]
-        });
-    } else if (overuseWater > 10 || overuseElectricity > 10) {
-        icon = L.divIcon({
-            className: 'triangle-marker', // مثلث زرد
-            html: `<div style="border-bottom-color: yellow;"></div>`,
-            iconSize: [14, 14]
-        });
-    } else {
-        icon = L.divIcon({
-            className: 'triangle-marker', // مثلث سبز
-            html: `<div style="border-bottom-color: green;"></div>`,
-            iconSize: [14, 14]
-        });
-    }
-
-    // اضافه کردن مارکر مثلثی
-    L.marker([lat, lon], { icon }).addTo(map).bindPopup(`
+if (overuseWater > 50 && overuseElectricity > 50) {
+    var icon = L.divIcon({
+        className: '',
+        html: <div class="triangle-marker" style="border-bottom-color: red;"></div>,
+        iconSize: [14, 14]
+    });
+    L.marker([lat, lon], { icon }).addTo(map).bindPopup(
     <b>Well ID:</b> ${row["کد کلاسه"]}<br>
     <b>Water Overuse:</b> ${overuseWater}%<br>
     <b>Electricity Overuse:</b> ${overuseElectricity}%
-    `);
+    );
+} else if (overuseWater > 30 || overuseElectricity > 30) {
+    var icon = L.divIcon({
+        className: '',
+        html: <div class="triangle-marker" style="border-bottom-color: orange;"></div>,
+        iconSize: [14, 14]
+    });
+    L.marker([lat, lon], { icon }).addTo(map).bindPopup(
+    <b>Well ID:</b> ${row["کد کلاسه"]}<br>
+    <b>Water Overuse:</b> ${overuseWater}%<br>
+    <b>Electricity Overuse:</b> ${overuseElectricity}%
+    );
+} else if (overuseWater > 10 || overuseElectricity > 10) {
+    var icon = L.divIcon({
+        className: '',
+        html: <div class="triangle-marker" style="border-bottom-color: yellow;"></div>,
+        iconSize: [14, 14]
+    });
+    L.marker([lat, lon], { icon }).addTo(map).bindPopup(
+    <b>Well ID:</b> ${row["کد کلاسه"]}<br>
+    <b>Water Overuse:</b> ${overuseWater}%<br>
+    <b>Electricity Overuse:</b> ${overuseElectricity}%
+    );
+} else {
+    var icon = L.divIcon({
+        className: '',
+        html: <div class="triangle-marker" style="border-bottom-color: green;"></div>,
+        iconSize: [14, 14]
+    });
+    L.marker([lat, lon], { icon }).addTo(map).bindPopup(
+    <b>Well ID:</b> ${row["کد کلاسه"]}<br>
+    <b>Water Overuse:</b> ${overuseWater}%<br>
+    <b>Electricity Overuse:</b> ${overuseElectricity}%
+    );
+}
+}
+});
+},
+
+
+// بارگذاری و پردازش داده‌ها با PapaParse
+Papa.parse(csvUrl, {
+download: true,
+header: true,
+complete: function(results) {
+results.data.forEach(function(row) {
+var lat = parseFloat(row["Latitude"]);
+var lon = parseFloat(row["Longitude"]);
+var checked = row["پرسشنامه تکمیل شد"] === "TRUE";
+
+if (!isNaN(lat) && !isNaN(lon)) {
+var markerColor = checked ? "green" : "red";
+var markerOptions = {
+color: markerColor,
+radius: 3
+};
+
+if (checked) {
+markerOptions.className = 'flashing-marker';
+}
+
+L.circleMarker([lat, lon], markerOptions).addTo(map).bindPopup(`
+<b>Well ID:</b> ${row["کد کلاسه"]}<br>
+<b>Checked:</b> ${checked ? "Yes" : "No"}
+`);
 }
 });
 },
@@ -136,6 +167,26 @@ console.error("Error parsing CSV:", error);
 }
 });
 
+
+
+
+
+
+
+
+    
+error: function(error) {
+console.error("Error parsing CSV:", error);
+}
+});
+
+
+
+
+
+
+
+    
 // بارگذاری و افزودن لایه Shapefile
 shp("shape_files/Aquifer_.zip").then(function(geojson) {
   L.geoJSON(geojson, {
