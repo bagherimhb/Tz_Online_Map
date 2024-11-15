@@ -87,6 +87,21 @@
     height: auto;
     z-index: 2000;
 }
+
+.legend {
+    line-height: 18px;
+    color: #555;
+    background-color: white;
+    padding: 6px 8px;
+    border-radius: 5px;
+}
+.legend i {
+    width: 18px;
+    height: 18px;
+    float: left;
+    margin-right: 8px;
+    opacity: 0.7;
+}
 </style>
 </head>
 <body>
@@ -130,6 +145,18 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     L.control.layers(baseLayers).addTo(map);
+
+    // اضافه کردن مقیاس
+    L.control.scale({imperial: false}).addTo(map);
+
+    // اضافه کردن جهت شمال
+    var north = L.control({position: "topright"});
+    north.onAdd = function(map) {
+        var div = L.DomUtil.create("div", "info legend");
+        div.innerHTML = '<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAACXBIWXMAAAsTAAALEwEAmpwYAAABFUlEQVR4nM2UPU7DQBCFP0cUdEhcAW6QA1BwFApSUFJDQUnPNSi5Agl1Cio6TkBHg0QREjQU2COtZO3a3rWjSLxqpZ15b3Z2/hYGwBJogRvgDXgHboEVMPQk9prSxw/gGZgBBZADU+AReC3JvwCjIWAFPAHjhP8YuANyoAGOgFPgwcbvgQmwsLECOAHqwDLgGjizuULQxfbfDLgAToJgm8A74MjGc+DYxk1g5+5uE3gd2BXAhY2XQOXsKqfzD3BuawXQBHZFYJcBl8Cp2VVBpwQ+gJnZlU5nGwTLgGtgbOMKuDK7TOiUwDcwt7UK6ITBMuDG2RXOrgy6/4Lp2/5p7/vLnvf9C7cK4BdVjrfxRQf3XQAAAABJRU5ErkJggg==" style="width:20px;height:20px;">';
+        return div;
+    };
+    north.addTo(map);
 
     // بارگذاری و نمایش Shapefile آکیفر
     shp("shape_files/Aquifer_.zip").then(function(geojson){
@@ -231,6 +258,19 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.warn("Invalid coordinates for well ID:", wellID);
                 }
             });
+
+            // اضافه کردن راهنما
+            var legend = L.control({position: 'bottomleft'});
+            legend.onAdd = function (map) {
+                var div = L.DomUtil.create('div', 'info legend');
+                div.innerHTML += '<i style="background: red"></i> اضافه برداشت شدید<br>';
+                div.innerHTML += '<i style="background: orange"></i> اضافه برداشت متوسط<br>';
+                div.innerHTML += '<i style="background: yellow"></i> اضافه برداشت کم<br>';
+                div.innerHTML += '<i style="background: green"></i> برداشت نرمال<br>';
+                div.innerHTML += '<i style="background: blue; border-radius: 50%;"></i> پرسشنامه تکمیل شده<br>';
+                return div;
+            };
+            legend.addTo(map);
         },
         error: function(error) {
             console.error("Error loading CSV data:", error);
@@ -243,7 +283,7 @@ document.addEventListener('DOMContentLoaded', function() {
         markers.forEach(function(item) {
             var markerWellID = item.marker.wellID.toUpperCase();
             if (markerWellID.includes(searchQuery)) {
-                map.setView(item.marker.getLatLng(), 14);
+                map.setView(item.marker.getLatLng(), 15);
                 item.marker.openPopup();
                 found = true;
             }
