@@ -51,7 +51,7 @@
 
 <!-- بخش جستجو -->
 <div id="search-container">
-  <input type="text" id="well-id-search" placeholder="Enter WELL ID to search" />
+  <input type="text" id="well-id-search" placeholder="برای جستجوی چاه، کلاسه آن را وارد نمائید" />
   <button onclick="searchWell()">Search</button>
 </div>
 
@@ -71,7 +71,7 @@ var map = L.map('map', {
 // افزودن لایه OSM
 var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
-  attribution: '© OpenStreetMap contributors'
+  attribution: 'Developer: MH Bagheri'
 });
 
 // افزودن لایه ماهواره‌ای MapTiler
@@ -80,7 +80,7 @@ var mapTilerSatLayer = L.tileLayer('https://api.maptiler.com/maps/hybrid/{z}/{x}
   zoomOffset: -1,
   minZoom: 1,
   maxZoom: 19,
-  attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
+  attribution: 'Developer: MH Bagheri',
   crossOrigin: true
 }).addTo(map);
 
@@ -181,7 +181,7 @@ Papa.parse(csvUrl, {
     console.error("Error parsing CSV:", error);
   }
 });
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // بارگذاری و افزودن لایه Shapefile با شفافیت 30%
 shp("shape_files/Aquifer_.zip").then(function(geojson) {
   L.geoJSON(geojson, {
@@ -196,7 +196,10 @@ shp("shape_files/Aquifer_.zip").then(function(geojson) {
 }).catch(function(error) {
   console.error("Error loading shapefile:", error);
 });
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+  
 // جستجو بر اساس WELL ID
 function searchWell() {
   var searchTerm = document.getElementById("well-id-search").value.toUpperCase();
