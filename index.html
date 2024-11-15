@@ -3,13 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Customized Agricultural Well Map with Leaflet</title>
+    <title>Well Map with Custom MapTiler Layer</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
-    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
     <style>
         @keyframes flash {
             0% { opacity: 1; }
@@ -23,60 +20,95 @@
             width: 100%;
             height: 600px;
         }
-        .custom-popup .leaflet-popup-content-wrapper {
-            background: rgba(255, 255, 255, 0.8);
-            color: #333;
-            font-size: 14px;
-            line-height: 24px;
-            border-radius: 5px;
-        }
-        .custom-popup .leaflet-popup-content-wrapper a {
-            color: rgba(0, 0, 255, 0.8);
-        }
-        .custom-popup .leaflet-popup-tip-container {
-            width: 30px;
-            height: 15px;
-        }
-        .custom-popup .leaflet-popup-tip {
-            background: rgba(255, 255, 255, 0.8);
-        }
-        .marker-pin {
-            width: 30px;
-            height: 30px;
-            border-radius: 50% 50% 50% 0;
-            position: absolute;
-            transform: rotate(-45deg);
-            left: 50%;
-            top: 50%;
-            margin: -15px 0 0 -15px;
-        }
-        .marker-pin::after {
-            content: '';
-            width: 24px;
-            height: 24px;
-            margin: 3px 0 0 3px;
-            background: #fff;
-            position: absolute;
-            border-radius: 50%;
-        }
     </style>
 </head>
 <body>
     <div id="map"></div>
     <script>
+        var mapTilerKey = 'otxQEa1xT4DzKWLSdyS7';
+
         // ایجاد نقشه و تنظیمات اولیه
         var map = L.map('map', {
             center: [31.052, 53.2621],
             zoom: 10
         });
 
-        // افزودن لایه OpenStreetMap به عنوان لایه پایه
+        // افزودن لایه OSM به عنوان لایه پایه
         var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
+        });
 
-        // اضافه کردن لایه‌های دیگر
-        var cycleMap = L.tileLayer('https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png', {
-            maxZoom: 20,
-            attribution: '<a href="https://github.com/cyclosm/cyclosm
+        // افزودن لایه ماهواره‌ای MapTiler (نقشه اختصاصی)
+var customMapTilerLayer = L.tileLayer('https://api.maptiler.com/maps/{mapId}/{z}/{x}/{y}.png?key={apiKey}', {
+    mapId: '0e59cd8b-e06d-4ca4-a216-0541c8200c50',
+    apiKey: mapTilerKey,
+    tileSize: 512,
+    zoomOffset: -1,
+    minZoom: 1,
+    maxZoom: 19,
+    attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
+    crossOrigin: true
+});
+
+        // افزودن لایه ماهواره‌ای MapTiler
+        var mapTilerSatLayer = L.tileLayer('https://api.maptiler.com/maps/hybrid/{z}/{x}/{y}.jpg?key=' + mapTilerKey, {
+            tileSize: 512,
+            zoomOffset: -1,
+            minZoom: 1,
+            maxZoom: 19,
+            attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
+            crossOrigin: true
+        });
+
+        // لایه پیش‌فرض را اضافه می‌کنیم
+        customMapTilerLayer.addTo(map);
+
+        // افزودن لایه‌های نقشه به عنوان گزینه‌های انتخابی
+        var baseLayers = {
+            "OSM": osmLayer,
+            "Bagheri_Tiler": customMapTilerLayer,
+            "Satellite": mapTilerSatLayer
+        };
+        
+        // کنترل لایه‌ها را به نقشه اضافه کنید
+        L.control.layers(baseLayers).addTo(map);
+
+        // لینک CSV داده‌های Google Sheets
+        const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSge8iyIvBomiIgCEQIv1ctR2Wgll3aGclzzgkbBiJCWE5wgRCE41KDq0uUUU8l0X8IbxDqIFvVlEa0/pub?gid=0&single=true&output=csv";
+
+        // بارگذاری و پردازش داده‌ها با PapaParse
+        Papa.parse(csvUrl, {
+            download: true,
+            header: true,
+            complete: function(results) {
+                results.data.forEach(function(row) {
+                    var lat = parseFloat(row["Latitude"]);
+                    var lon = parseFloat(row["Longitude"]);
+                    var checked = row["پرسشنامه تکمیل شد"] === "TRUE";
+
+                    if (!isNaN(lat) && !isNaN(lon)) {
+                        var markerColor = checked ? "green" : "red";
+                        var markerOptions = {
+                            color: markerColor,
+                            radius: 5
+                        };
+
+                        if (checked) {
+                            markerOptions.className = 'flashing-marker';
+                        }
+
+                        L.circleMarker([lat, lon], markerOptions).addTo(map).bindPopup(`
+                            <b>Well ID:</b> ${row["کد کلاسه"]}<br>
+                            <b>Checked:</b> ${checked ? "Yes" : "No"}
+                        `);
+                    }
+                });
+            },
+            error: function(error) {
+                console.error("Error parsing CSV:", error);
+            }
+        });
+    </script>
+</body>
+</html>
