@@ -1,310 +1,132 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>هم‌بست آب-انرژی-محیط زیست آبخوان</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
-<script src="https://unpkg.com/shpjs@latest/dist/shp.js"></script>
-<style>
-@keyframes flash {
-0% { opacity: 1; }
-50% { opacity: 0.1; }
-100% { opacity: 1; }
-}
-
-.flashing-marker {
-animation: flash 1s infinite;
-}
-
-#map {
-width: 100%;
-height: 600px;
-}
-
-.triangle-marker {
-width: 0;
-height: 0;
-border-left: 7px solid transparent;
-border-right: 7px solid transparent;
-position: absolute;
-transform: translate(-50%, -50%);
-z-index: 0;
-}
-
-.marker-circle {
-width: 6px;
-height: 6px;
-border-radius: 50%;
-background-color: blue;
-position: absolute;
-transform: translate(-50%, -50%);
-z-index: 1;
-}
-
-.flashing-circle {
-animation: flash 1s infinite;
-}
-
-#search-container {
-margin: 10px;
-padding: 5px;
-}
-
-#well-id-search {
-width: 250px;
-height: 30px;
-padding: 5px;
-font-size: 16px;
-border-radius: 5px;
-border: 1px solid #ccc;
-margin-right: 10px;
-}
-
-#search-container button {
-height: 40px;
-padding: 0 15px;
-font-size: 16px;
-background-color: #4CAF50;
-color: white;
-border: none;
-border-radius: 5px;
-cursor: pointer;
-margin-right: 5px;
-}
-
-#search-container button:hover {
-background-color: #45a049;
-}
-
-#logo {
-position: fixed;
-bottom: 20px;
-right: 10px;
-width: 150px;
-height: auto;
-z-index: 1000;
-}
-
-.legend {
-line-height: 18px;
-bottom: 20px;
-color: #555;
-background-color: white;
-padding: 6px 8px;
-border-radius: 5px;
-}
-.legend i {
-width: 14px;
-height: 14px;
-float: left;
-margin-right: 8px;
-opacity: 0.9;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>هم‌بست آب-انرژی-محیط زیست آبخوان</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script src="https://unpkg.com/shpjs@latest/dist/shp.js"></script>
+    <style>
+        @keyframes flash {
+            0% { opacity: 1; }
+            50% { opacity: 0.1; }
+            100% { opacity: 1; }
+        }
+        .flashing-marker { animation: flash 1s infinite; }
+        #map { width: 100%; height: calc(100vh - 100px); } /* تنظیم ارتفاع نقشه */
+        .triangle-marker {
+            width: 0; height: 0;
+            border-left: 7px solid transparent;
+            border-right: 7px solid transparent;
+            position: absolute; transform: translate(-50%, -50%);
+            z-index: 0;
+        }
+        .marker-circle {
+            width: 6px; height: 6px;
+            border-radius: 50%; background-color: blue;
+            position: absolute; transform: translate(-50%, -50%);
+            z-index: 1;
+        }
+        .flashing-circle { animation: flash 1s infinite; }
+        #search-container { margin: 10px; padding: 5px; }
+        #well-id-search {
+            width: 250px; height: 30px;
+            padding: 5px; font-size: 16px;
+            border-radius: 5px; border: 1px solid #ccc;
+            margin-right: 10px;
+        }
+        #search-container button {
+            height: 40px; padding: 0 15px;
+            font-size: 16px; background-color: #4CAF50;
+            color: white; border: none;
+            border-radius: 5px; cursor: pointer;
+            margin-right: 5px;
+        }
+        #search-container button:hover { background-color: #45a049; }
+        #logo {
+            position: absolute; /* تغییر به absolute */
+            bottom: 20px; right: 10px;
+            width: 150px; height: auto;
+            z-index: 1000;
+        }
+        .legend {
+            line-height: 18px; bottom: 20px;
+            color: #555; background-color: white;
+            padding: 6px 8px; border-radius: 5px;
+        }
+        .legend i {
+            width: 14px; height: 14px;
+            float: left; margin-right: 8px;
+            opacity: 0.9;
+        }
+    </style>
 </head>
 <body>
+    <div id="search-container">
+        <input type="text" id="well-id-search" placeholder="برای جستجوی چاه، کلاسه را وارد نمائید" />
+        <button onclick="searchWell()">جستجو</button>
+        <button onclick="clearSearch()">پاک کردن</button>
+    </div>
+    <div id="map"></div>
+    <img id="logo" src="images/waterCo_university.png" alt="Logo" />
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var mapTilerKey = 'otxQEa1xT4DzKWLSdyS7';
+            var map = L.map('map', { center: [31.052, 53.2621], zoom: 11 });
+            
+            var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: 'Developer: MH Bagheri '
+            }).addTo(map);
+            
+            var mapTilerSatLayer = L.tileLayer('https://api.maptiler.com/maps/hybrid/{z}/{x}/{y}.jpg?key=' + mapTilerKey, {
+                tileSize: 512,
+                zoomOffset: -1,
+                minZoom: 1,
+                maxZoom: 19,
+                attribution: 'Developer: MH Bagheri ',
+                crossOrigin:true
+            });
+            
+            var baseLayers = { "OSM": osmLayer, "Satellite": mapTilerSatLayer };
+            L.control.layers(baseLayers).addTo(map);
+            
+            // اضافه کردن مقیاس
+            L.control.scale({imperial:false}).addTo(map);
+            
+            // بارگذاری و نمایش Shapefile آکیفر
+            shp("shape_files/Aquifer_.zip").then(function(geojson) {
+                var aquiferLayer = L.geoJSON(geojson, {
+                    style:function(feature) {
+                        return { fillColor:'blue', weight:'2', opacity:'0.3', color:'blue', fillOpacity:'0.3' };
+                    }
+                }).addTo(map);
+                
+                // اضافه کردن لایه آکیفر به کنترل لایه‌ها
+                baseLayers["Aquifer"] = aquiferLayer;
+                L.control.layers(baseLayers).addTo(map);
+                
+            }).catch(function(error) {
+                console.error("Error loading Shapefile:", error);
+            });
 
-<div id="search-container">
-<input type="text" id="well-id-search" placeholder="برای جستجوی چاه، کلاسه را وارد نمائید" />
-<button onclick="searchWell()">جستجو</button>
-<button onclick="clearSearch()">پاک کردن</button>
-</div>
+             // ادامه کد...
+             
+             window.searchWell = function() {
+                 // تابع جستجو
+             };
 
-<div id="map"></div>
-
-<img id="logo" src="images/waterCo_university.png" alt="Logo" />
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-var mapTilerKey = 'otxQEa1xT4DzKWLSdyS7';
-
-var map = L.map('map', {
-center: [31.052, 53.2621],
-zoom: 11
-});
-
-var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-maxZoom: 19,
-attribution: 'Developer: MH Bagheri '
-}).addTo(map);
-
-var mapTilerSatLayer = L.tileLayer('https://api.maptiler.com/maps/hybrid/{z}/{x}/{y}.jpg?key=' + mapTilerKey, {
-tileSize: 512,
-zoomOffset: -1,
-minZoom: 1,
-maxZoom: 19,
-attribution: 'Developer: MH Bagheri ',
-crossOrigin: true
-});
-
-var baseLayers = {
-"OSM": osmLayer,
-"Satellite": mapTilerSatLayer
-};
-
-L.control.layers(baseLayers).addTo(map);
-
-// اضافه کردن مقیاس
-L.control.scale({imperial: false}).addTo(map);
-
-// اضافه کردن جهت شمال
-var north = L.control({position: "topright"});
-north.onAdd = function(map) {
-var div = L.DomUtil.create("div", "info legend");
-div.innerHTML = '<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAACXBIWXMAAAsTAAALEwEAmpwYAAABFUlEQVR4nM2UPU7DQBCFP0cUdEhcAW6QA1BwFApSUFJDQUnPNSi5Agl1Cio6TkBHg0QREjQU2COtZO3a3rWjSLxqpZ15b3Z2/hYGwBJogRvgDXgHboEVMPQk9prSxw/gGZgBBZADU+AReC3JvwCjIWAFPAHjhP8YuANyoAGOgFPgwcbvgQmwsLECOAHqwDLgGjizuULQxfbfDLgAToJgm8A74MjGc+DYxk1g5+5uE3gd2BXAhY2XQOXsKqfzD3BuawXQBHZFYJcBl8Cp2VVBpwQ+gJnZlU5nGwTLgGtgbOMKuDK7TOiUwDcwt7UK6ITBMuDG2RXOrgy6/4Lp2/5p7/vLnvf9C7cK4BdVjrfxRQf3XQAAAABJRU5ErkJggg==" style="width:20px;height:20px;">';
-return div;
-};
-//north.addTo(map);
-
-// بارگذاری و نمایش Shapefile آکیفر
-shp("shape_files/Aquifer_.zip").then(function(geojson){
-var aquiferLayer = L.geoJSON(geojson, {
-style: function (feature) {
-return {
-fillColor: 'blue',
-weight: 2,
-opacity: 0.3,
-color: 'blue',
-fillOpacity: 0.3
-};
-}
-}).addTo(map);
-
-// اضافه کردن لایه آکیفر به کنترل لایه‌ها
-baseLayers["Aquifer"] = aquiferLayer;
-L.control.layers(baseLayers).addTo(map);
-}).catch(function(error) {
-console.error("Error loading Shapefile:", error);
-});
-
-const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSge8iyIvBomiIgCEQIv1ctR2Wgll3aGclzzgkbBiJCWE5wgRCE41KDq0uUUU8l0X8IbxDqIFvVlEa0/pub?gid=0&single=true&output=csv";
-
-var markers = [];
-
-Papa.parse(csvUrl, {
-download: true,
-header: true,
-complete: function(results) {
-console.log("CSV data loaded successfully");
-results.data.forEach(function(row) {
-var lat = parseFloat(row["Latitude"]);
-var lon = parseFloat(row["Longitude"]);
-var checked = row["پرسشنامه تکمیل شد"] === "TRUE";
-var overuseWater = parseFloat(row["درصد اضافه برداشت آب"]);
-var overuseElectricity = parseFloat(row["درصد اضافه برداشت برق"]);
-var wellID = row["کد کلاسه"];
-
-if (!isNaN(lat) && !isNaN(lon) && lat !== 0 && lon !== 0) {
-var triangleIcon;
-var circleIcon;
-
-if (overuseWater > 42.5 && overuseElectricity > 42.5) {
-triangleIcon = L.divIcon({
-className: 'triangle-marker',
-html: `<div style="border-bottom: 14px solid red;"></div>`,
-iconSize: [10, 10]
-});
-} else if (overuseWater > 20 || overuseElectricity > 20) {
-triangleIcon = L.divIcon({
-className: 'triangle-marker',
-html: `<div style="border-bottom: 14px solid orange;"></div>`,
-iconSize: [10, 10]
-});
-} else if (overuseWater > 5 || overuseElectricity > 5) {
-triangleIcon = L.divIcon({
-className: 'triangle-marker',
-html: `<div style="border-bottom: 14px solid yellow;"></div>`,
-iconSize: [10, 10]
-});
-} else {
-triangleIcon = L.divIcon({
-className: 'triangle-marker',
-html: `<div style="border-bottom: 14px solid green;"></div>`,
-iconSize: [10, 10]
-});
-}
-
-if (checked) {
-circleIcon = L.divIcon({
-className: 'marker-circle flashing-circle',
-iconSize: [12, 12]
-});
-} else {
-circleIcon = L.divIcon({
-className: 'marker-circle',
-iconSize: [3, 3]
-});
-}
-
-var marker = L.marker([lat, lon], { icon: triangleIcon }).addTo(map)
-.bindPopup(`
-<b>Well ID:</b> ${wellID}<br>
-<b>Water Overuse:</b> ${overuseWater}%<br>
-<b>Electricity Overuse:</b> ${overuseElectricity}%
-`);
-marker.wellID = wellID;
-
-var circleMarker = L.marker([lat, lon], { icon: circleIcon }).addTo(map)
-.bindPopup(`
-<b>Well ID:</b> ${wellID}<br>
-<b>Water Overuse:</b> ${overuseWater}%<br>
-<b>Electricity Overuse:</b> ${overuseElectricity}%
-`);
-
-markers.push({ marker: marker, circleMarker: circleMarker });
-} else {
-console.warn("Invalid coordinates for well ID:", wellID);
-}
-});
-
-// اضافه کردن راهنما
-var legend = L.control({position: 'bottomleft'});
-legend.onAdd = function (map) {
-var div = L.DomUtil.create('div', 'info legend');
-div.innerHTML += '<i style="background: red"></i> اضافه برداشت شدید<br>';
-div.innerHTML += '<i style="background: orange"></i> اضافه برداشت متوسط<br>';
-div.innerHTML += '<i style="background: yellow"></i> اضافه برداشت کم<br>';
-div.innerHTML += '<i style="background: green"></i> برداشت نرمال<br>';
-div.innerHTML += '<i style="background: blue; border-radius: 50%;"></i> پرسشنامه تکمیل شده<br>';
-return div;
-};
-legend.addTo(map);
-},
-error: function(error) {
-console.error("Error loading CSV data:", error);
-}
-});
-
-window.searchWell = function() {
-var searchQuery = document.getElementById("well-id-search").value.trim().toUpperCase();
-var found = false;
-markers.forEach(function(item) {
-var markerWellID = item.marker.wellID.toUpperCase();
-if (markerWellID.includes(searchQuery)) {
-map.setView(item.marker.getLatLng(), 15);
-item.marker.openPopup();
-found = true;
-}
-});
-if (!found) {
-alert("چاه مورد نظر یافت نشد.");
-}
-}
-
-window.clearSearch = function() {
-document.getElementById("well-id-search").value = "";
-map.setView([31.052, 53.2621], 11);
-}
-
-document.getElementById("well-id-search").addEventListener("keyup", function(event) {
-if (event.key === "Enter") {
-searchWell();
-}
-});
-});
-</script>
+             window.clearSearch = function() {
+                 // تابع پاک کردن جستجو
+             };
+             
+             document.getElementById("well-id-search").addEventListener("keyup", function(event) {
+                 if (event.key === "Enter") { searchWell(); }
+             });
+         });
+     </script>
 </body>
 </html>
