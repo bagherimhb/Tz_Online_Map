@@ -9,14 +9,16 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
-<script src="https://unpkg.com/shpjs@latest/dist/shp.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-/* تنظیمات استایل همانند نسخه قبلی */
-#map { width: 100%; height: 70vh; }
+/* تنظیمات استایل */
+#map { width: 100%; height: 70vh; margin: 0; padding: 0; }
 #chartContainer { width: 100%; height: 30vh; }
-.legend { /* سایر استایل‌ها */ }
-/* بقیه استایل‌ها تغییر نکرده‌اند */
+.marker-circle { width: 6px; height: 6px; border-radius: 50%; background-color: blue; transform: translate(-50%, -50%); }
+.flashing-circle { animation: flash 1s infinite; }
+@keyframes flash { 0% { opacity: 1; } 50% { opacity: 0.1; } 100% { opacity: 1; } }
+.legend { bottom: 60px; line-height: 18px; color: #555; background-color: white; padding: 6px 8px; border-radius: 5px; }
+.legend i { width: 14px; height: 14px; float: left; margin-right: 8px; opacity: 0.9; }
 </style>
 </head>
 <body>
@@ -30,18 +32,48 @@
 <div id="chartContainer">
     <canvas id="evaporationChart"></canvas>
 </div>
-<img id="logo" src="images/waterCo_university.png" alt="Logo" />
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     var map = L.map('map', { center: [31.052, 53.2621], zoom: 11 });
 
-    var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: 'Developer: MH Bagheri'
-    }).addTo(map);
+    // افزودن لایه‌های نقشه
+    var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+    var satelliteLayer = L.tileLayer('https://api.maptiler.com/maps/hybrid/{z}/{x}/{y}.jpg?key=YOUR_MAPTILER_KEY', { maxZoom: 19 });
+    L.control.layers({ "OSM": osmLayer, "Satellite": satelliteLayer }).addTo(map);
 
-    // افزودن کنترل‌های رسم
+    // افزودن داده‌ها
+    const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSge8iyIvBomiIgCEQIv1ctR2Wgll3aGclzzgkbBiJCWE5wgRCE41KDq0uUUU8l0X8IbxDqIFvVlEa0/pub?gid=0&single=true&output=csv";
+
+    Papa.parse(csvUrl, {
+        download: true,
+        header: true,
+        complete: function (results) {
+            let data = results.data.map(row => ({
+                lat: parseFloat(row["Latitude"]),
+                lon: parseFloat(row["Longitude"]),
+                overuseWater: parseFloat(row["درصد اضافه برداشت آب"]),
+                overuseElectricity: parseFloat(row["درصد اضافه برداشت برق"]),
+                questionnaireCompleted: row["پرسشنامه تکمیل شد"] === "TRUE",
+                wellID: row["کد کلاسه"]
+            })).filter(d => !isNaN(d.lat) && !isNaN(d.lon));
+
+            // افزودن مارکرها
+            data.forEach(item => {
+                let color = item.overuseWater > 50 ? "red" : item.overuseWater > 30 ? "orange" : item.overuseWater > 10 ? "yellow" : "green";
+
+                let circleIcon = L.divIcon({
+                    className: item.questionnaireCompleted ? 'marker-circle flashing-circle' : 'marker-circle',
+                    iconSize: [12, 12]
+                });
+
+                L.marker([item.lat, item.lon], { icon: circleIcon }).addTo(map)
+                    .bindPopup(`<b>Well ID:</b> ${item.wellID}<br><b>Overuse:</b> ${item.overuseWater}%`);
+            });
+        }
+    });
+
+    // ابزار رسم پلیگون
     var drawnItems = new L.FeatureGroup();
     map.addLayer(drawnItems);
 
@@ -51,26 +83,20 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     map.addControl(drawControl);
 
-    // ایجاد نقشه و داده‌های اولیه
-    shp("shape_files/Aquifer_.zip").then(function (geojson) {
-        L.geoJSON(geojson, { style: { fillColor: 'blue', weight: 2 } }).addTo(map);
-    });
-
-    // تعریف رویداد رسم پلیگون
     map.on(L.Draw.Event.CREATED, function (e) {
         var layer = e.layer;
         drawnItems.addLayer(layer);
 
+        // مختصات پلیگون رسم‌شده
         var coordinates = layer.getLatLngs();
-        console.log('Polygon Coordinates:', coordinates);
 
-        // دریافت داده‌های تبخیر و تعرق
+        // شبیه‌سازی دریافت داده‌های تبخیر و تعرق
         fetchEvaporationData(coordinates).then(data => {
             updateChart(data.labels, data.values);
         });
     });
 
-    // مثال داده‌های تبخیر و تعرق ماهانه
+    // دریافت داده‌های تبخیر و تعرق
     async function fetchEvaporationData(coords) {
         const years = Array.from({ length: 2023 - 2010 + 1 }, (_, i) => 2010 + i);
         const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -79,14 +105,14 @@ document.addEventListener('DOMContentLoaded', function () {
         return { labels, values };
     }
 
-    // افزودن نمودار Chart.js
+    // افزودن نمودار
     var ctx = document.getElementById('evaporationChart').getContext('2d');
     var evaporationChart = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: [],
             datasets: [{
-                label: 'Monthly Evaporation (mm)',
+                label: 'تبخیر و تعرق واقعی (میلیمتر)',
                 data: [],
                 backgroundColor: 'rgba(54, 162, 235, 0.6)',
                 borderColor: 'rgba(54, 162, 235, 1)',
@@ -96,21 +122,20 @@ document.addEventListener('DOMContentLoaded', function () {
         options: {
             responsive: true,
             scales: {
-                x: { title: { display: true, text: 'Time' } },
-                y: { beginAtZero: true, title: { display: true, text: 'Evaporation (mm)' } }
+                x: { title: { display: true, text: 'زمان' } },
+                y: { beginAtZero: true, title: { display: true, text: 'تبخیر و تعرق (میلیمتر)' } }
             }
         }
     });
 
-    // به‌روزرسانی داده‌های نمودار
+    // به‌روزرسانی نمودار
     function updateChart(labels, values) {
         evaporationChart.data.labels = labels;
         evaporationChart.data.datasets[0].data = values;
         evaporationChart.update();
     }
-
-    // بقیه اسکریپت اصلی تغییر نکرده‌اند
 });
 </script>
+
 </body>
 </html>
