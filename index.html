@@ -118,3 +118,147 @@ document.addEventListener('DOMContentLoaded', function() {
     // افزودن لایه ماهواره‌ای
     var mapTilerKey = 'otxQEa1xT4DzKWLSdyS7';
     var mapTilerSatLayer = L.tileLayer('https://api.maptiler.com/maps/hybrid/{z}/{x}/{y}.jpg?key=' + mapTilerKey, {
+        tileSize: 512,
+        zoomOffset: -1,
+        minZoom: 1,
+        maxZoom: 19,
+        attribution: 'Developer: MH Bagheri',
+        crossOrigin: true
+    });
+
+    var baseLayers = {
+        "OSM": osmLayer,
+        "Satellite": mapTilerSatLayer
+    };
+
+    L.control.layers(baseLayers).addTo(map);
+
+    // بارگذاری و نمایش Shapefile آکیفر
+    shp("shape_files/Aquifer_.zip").then(function(geojson) {
+        L.geoJSON(geojson, {
+            style: function() {
+                return {
+                    fillColor: 'blue',
+                    weight: 2,
+                    opacity: 0.3,
+                    color: 'blue',
+                    fillOpacity: 0.3
+                };
+            }
+        }).addTo(map);
+    });
+
+    const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSge8iyIvBomiIgCEQIv1ctR2Wgll3aGclzzgkbBiJCWE5wgRCE41KDq0uUUU8l0X8IbxDqIFvVlEa0/pub?gid=0&single=true&output=csv";
+
+    Papa.parse(csvUrl, {
+        download: true,
+        header: true,
+        complete: function(results) {
+            let data = results.data.map(row => ({
+                lat: parseFloat(row["Latitude"]),
+                lon: parseFloat(row["Longitude"]),
+                overuseWater: parseFloat(row["درصد اضافه برداشت آب"]),
+                overuseElectricity: parseFloat(row["درصد اضافه برداشت برق"]),
+                questionnaireCompleted: row["پرسشنامه تکمیل شد"] === "TRUE",
+                wellID: row["کد کلاسه"]
+            })).filter(d => !isNaN(d.lat) && !isNaN(d.lon));
+
+           // محاسبه شاخص ترکیبی
+           data.forEach(item => {
+               item.combinedIndex = (0.7 * item.overuseWater) + (0.3 * item.overuseElectricity);
+           });
+
+           // چارک‌بندی
+           let indices = data.map(d => d.combinedIndex).sort((a, b) => a - b);
+           let q1 = indices[Math.floor(indices.length / 4)];
+           let q2 = indices[Math.floor(indices.length / 2)];
+           let q3 = indices[Math.floor((3 * indices.length) / 4)];
+
+           data.forEach(item => {
+               if (item.combinedIndex <= q1) {
+                   item.category = "کم مصرف";
+               } else if (item.combinedIndex <= q2) {
+                   item.category = "مصرف متوسط";
+               } else if (item.combinedIndex <= q3) {
+                   item.category = "پرمصرف";
+               } else {
+                   item.category = "بسیار پرمصرف";
+               }
+           });
+
+           // افزودن مارکرها
+           data.forEach(item => {
+               let color;
+               switch (item.category) {
+                   case "کم مصرف": color = "green"; break;
+                   case "مصرف متوسط": color = "yellow"; break;
+                   case "پرمصرف": color = "orange"; break;
+                   case "بسیار پرمصرف": color = "red"; break;
+               }
+
+               let triangleIcon = L.divIcon({
+                   className: 'triangle-marker',
+                   html: `<div style="border-bottom: 14px solid ${color};"></div>`,
+                   iconSize: [10, 10]
+               });
+
+               let circleIcon = L.divIcon({
+                   className: item.questionnaireCompleted ? 'marker-circle flashing-circle' : 'marker-circle',
+                   iconSize: [12, 12]
+               });
+
+               L.marker([item.lat, item.lon], { icon: triangleIcon }).addTo(map)
+                   .bindPopup(`
+                       <b>Well ID:</b> ${item.wellID}<br>
+                       <b>Category:</b> ${item.category}<br>
+                       <b>Combined Index:</b> ${item.combinedIndex.toFixed(2)}
+                   `);
+
+               if (item.questionnaireCompleted) {
+                   L.marker([item.lat, item.lon], { icon: circleIcon }).addTo(map);
+               }
+           });
+
+           // جستجوی کلاسه
+           document.getElementById('search-button').addEventListener('click', function() {
+               var searchQuery = document.getElementById('search-input').value.trim();
+               var well = data.find(d => d.wellID == searchQuery);
+
+               if (well) {
+                   map.setView([well.lat, well.lon], 14);
+                   L.popup()
+                       .setLatLng([well.lat, well.lon])
+                       .setContent(`
+                           <b>Well ID:</b> ${well.wellID}<br>
+                           <b>Category:</b> ${well.category}<br>
+                           <b>Combined Index:</b> ${well.combinedIndex.toFixed(2)}
+                       `)
+                       .openOn(map);
+               } else {
+                   alert("Well ID not found!");
+               }
+           });
+
+           // اضافه کردن راهنما
+           var legend = L.control({ position:'bottomleft' });
+           legend.onAdd = function() {
+               var div = L.DomUtil.create('div', 'info legend');
+               div.innerHTML += '<i style="background:red;"></i><span>کم مصرف</span><br>';
+               div.innerHTML += '<i style="background:red;"></i><span>مصرف متوسط</span><br>';
+               div.innerHTML += '<i style="background:red;"></i><span>پرمصرف</span><br>';
+               div.innerHTML += '<i style="background:red;"></i><span>بسیار پرمصرف</span><br>';
+               div.innerHTML += '<i style="background:black; border-radius :50%;"></i><span>پرسشنامه تکمیل شده</span><br>';
+               return div;}
+           legend.addTo(map);
+
+           // Event listener برای دکمه Clear
+           document.getElementById('clear-button').addEventListener('click', function() {
+               document.getElementById('search-input').value = ''; // پاک کردن محتوای کادر جستجو
+               map.setView([31.052,53.2621],11); // بازنشانی مرکز و زوم نقشه به حالت اولیه
+           });
+       }
+   });
+});
+</script>
+</body>
+</html>
