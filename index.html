@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
         // بارگذاری و نمایش kml شبکه تیسن
-    kml("shape_files/thiessen_abarkoh.kml").then(function(geojson) {
+    shp("shape_files/thiessen_abarkoh.zip").then(function(geojson) {
         L.geoJSON(geojson, {
             style: function() {
                 return {
