@@ -148,6 +148,21 @@ document.addEventListener('DOMContentLoaded', function() {
         }).addTo(map);
     });
 
+        // بارگذاری و نمایش kml شبکه تیسن
+    kml("shape_files/thiessen_abarkoh.kml").then(function(geojson) {
+        L.geoJSON(geojson, {
+            style: function() {
+                return {
+                    fillColor: 'blue',
+                    weight: 2,
+                    opacity: 0.3,
+                    color: 'red',
+                    fillOpacity: 0.3
+                };
+            }
+        }).addTo(map);
+    });
+
     const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSge8iyIvBomiIgCEQIv1ctR2Wgll3aGclzzgkbBiJCWE5wgRCE41KDq0uUUU8l0X8IbxDqIFvVlEa0/pub?gid=0&single=true&output=csv";
 
     Papa.parse(csvUrl, {
