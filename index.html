@@ -214,12 +214,12 @@ case "بسیار پرمصرف": color = "red"; break;
 let triangleIcon = L.divIcon({
 className: 'triangle-marker',
 html: `<div style="border-bottom: 14px solid ${color};"></div>`,
-iconSize: [8, 8]
+iconSize: [6, 6]
 });
 
 let circleIcon = L.divIcon({
 className: item.questionnaireCompleted ? 'marker-circle flashing-circle' : 'marker-circle',
-iconSize: [12, 12]
+iconSize: [10, 10]
 });
 
 L.marker([item.lat, item.lon], { icon: triangleIcon }).addTo(map)
