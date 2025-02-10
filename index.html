@@ -180,7 +180,7 @@ wellID: row["کد کلاسه"]
 
 // محاسبه شاخص ترکیبی
 data.forEach(item => {
-item.combinedIndex = (0.7 * item.overuseWater) + (0.3 * item.overuseElectricity);
+item.combinedIndex = (0.5 * item.overuseWater) + (0.5 * item.overuseElectricity);
 });
 
 // چارک‌بندی
